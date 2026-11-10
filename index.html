@@ -1,0 +1,1173 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#000000"><meta name="color-scheme" content="dark">
+<title>QQQ · animazione pallini · livelli rosso e verde</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:#000;color:#fff;margin:0}body{font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;-webkit-text-size-adjust:100%;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);touch-action:manipulation}
+main{max-width:520px;margin:0 auto;padding:8px 0 24px}
+canvas{display:block;width:100%;height:auto;border:2px solid #fff;border-radius:6px;image-rendering:pixelated;touch-action:none;background:#000}
+#pad{display:flex;justify-content:space-between;align-items:center;margin:12px 0;user-select:none;-webkit-user-select:none}
+.dp{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,64px);gap:8px}
+.b{font:700 24px system-ui;color:#fff;background:#000;border:2px solid #fff;border-radius:14px;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}.b:active{background:#fff;color:#000}
+#bU{grid-column:2;grid-row:1}#bL{grid-column:1;grid-row:2}#bD{grid-column:2;grid-row:2}#bR{grid-column:3;grid-row:2}
+#bF{width:112px;height:112px;border-radius:50%;font-size:20px;border-width:3px}
+.k{font-size:.78rem;color:#e6e6e6;margin:6px 0}
+details{border:1px solid #fff;border-radius:10px;padding:8px 12px;margin:10px 0}summary{cursor:pointer;font-weight:700}
+label{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:.9rem}select,button.s{font:inherit;color:#fff;background:#000;border:1px solid #fff;border-radius:8px;padding:8px 10px}
+p{margin:.5em 0}.m{color:#e6e6e6;font-size:.82rem}
+.d{display:block;box-sizing:border-box;flex:none;width:clamp(13px,4.3vw,22px);height:clamp(13px,4.3vw,22px);border-radius:50%;border:2px solid currentColor}
+.d{--c:#22c55e}.d.r0,.d.r1,.d.r2,.d.r2p,.d.r3{--c:#ef4444}
+.d.g1,.d.r1{background:transparent;border:3px solid var(--c)}
+.d.g0,.d.r0{background:transparent;border:3px dashed var(--c);opacity:.75}
+.d.g2,.d.r2{border:3px solid var(--c);background:linear-gradient(to top,var(--c) 50%,transparent 50%)}
+.d.g2p,.d.r2p{border:3px solid var(--c);background:linear-gradient(to right,var(--c) 50%,transparent 50%)}
+.d.g3,.d.r3{border:3px solid var(--c);background:var(--c)}
+.sep{display:block;flex:none;width:clamp(8px,3vw,16px)}
+.d.u{border-style:dotted;opacity:.5}.d.c{outline:2px solid currentColor;outline-offset:3px}
+#leg{margin:14px auto 0;display:grid;gap:7px;width:max-content;max-width:100%;text-align:left;font-size:clamp(12px,3.5vw,14px)}
+#leg .li{display:flex;align-items:center;gap:8px}#leg .li .d{width:18px;height:18px;border-width:2.5px;flex:none}#leg .li .d+.d{margin-left:-2px}
+#leg .n{opacity:.9;font-size:clamp(11px,3.2vw,13px);margin-top:2px}
+
+#leg{margin:12px auto 4px}
+#recap{border:2px solid #fff;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:.88rem;line-height:1.5;cursor:pointer}#recap b{font-size:1rem}#recap .rl{max-height:240px;overflow:auto;margin-top:8px;font-size:.8rem;cursor:default}#recap .rl div{display:flex;align-items:center;gap:8px;padding:3px 0;border-top:1px solid #333}#recap .rl .d{width:14px;height:14px;border-width:2px}#recap .rl b{font-size:.8rem;margin-left:auto}#recap .rl u{text-decoration:none;font-weight:600}#recap .rn{font-size:.72rem;opacity:.7;margin-top:6px}
+</style></head><body><main>
+<canvas id="cv" width="800" height="848" role="img" aria-label="Animazione in stile Wolfenstein: la pistola spara da sola i pallini dell'indicatore; il livello dipende dalla zona rossa o verde"></canvas>
+<div id="recap" class="card" hidden></div>
+<div id="leg"><div class="li"><i class="d r3"></i><i class="d g3"></i><span><b>pieno</b> · prezzo e RSI concordi</span></div><div class="li"><i class="d r2p"></i><i class="d g2p"></i><span><b>metà</b> · prezzo concorde, RSI no</span></div><div class="li"><i class="d r1"></i><i class="d g1"></i><span><b>vuoto</b> · prezzo fermo (l'RSI non conta)</span></div><div class="li"><i class="d r0"></i><i class="d g0"></i><span><b>tratteggiato</b> · prezzo CONTRO il colore</span></div><div class="n">Le munizioni nascono dai dati: a ogni barra chiusa nasce un pallino nuovo (a sinistra, con l'orario di inizio barra, ora di Roma); a ogni aggiornamento del prezzo il pallino «IN FORMAZIONE» a destra riflette la barra in corso (provvisorio, non conta per i livelli). Nessun pallino viene riusato. Cornice = ultimo pallino sparato. Il prezzo ha la priorità: se non è concorde, l'RSI non alza l'intensità. verde = istogramma positivo · rosso = negativo</div></div>
+<details><summary>Come funziona · impostazioni</summary>
+<p class="m"><b>È solo un'animazione:</b> il protagonista cammina e spara da solo, non c'è niente da comandare (e non può essere colpito).</p>
+<p class="m"><b>Livello = zona.</b> Se l'istogramma MACD (DIF − DEA) dell'ultima barra è negativo sei nel <b>livello 1 (zona rossa)</b>; se è positivo nel <b>livello 2 (zona verde)</b>. Quando la zona cambia parte la transizione al livello nuovo.</p>
+<p class="m"><b>Barre chiuse.</b> I segnali usano solo barre chiuse: la candela in formazione si vede solo come prezzo «ora». I dati si aggiornano a ogni chiusura (più un controllo al minuto del prezzo), non ogni 5 secondi; lo stato dei dati dice se sono aggiornati, in ritardo o a mercato chiuso (i festivi non sono riconosciuti).</p>
+<p class="m"><b>Intensità.</b> È quella dei pallini: il prezzo decide per primo (pieno = prezzo e RSI concordi, metà = prezzo concorde, vuoto = prezzo fermo, tratteggiato = prezzo contro il colore) e regola la luce dell'ambiente.</p>
+<p class="m"><b>Punteggio.</b> Ogni nemico colpito vale: −100 se il pallino è del colore opposto alla luce dell'ambiente in cui ti trovi (pallino rosso nel livello verde o viceversa); altrimenti +100 se il pallino è pieno (prezzo e RSI concordi), 0 per metà, vuoto e tratteggiato. Durante il gioco i pallini provvisori della barra in formazione valgono 0; nel riepilogo «mentre eri via» contano invece come gli altri. Il punteggio può quindi scendere.</p>
+<p class="m"><b>Mentre eri via.</b> Ogni volta che riapri la pagina (o torni alla scheda dopo almeno 30 secondi) l'app scarica le barre chiuse nel frattempo e le «rigioca» con le stesse regole di punteggio: ogni aggiornamento che il gioco avrebbe sparato è ricostruito con i dati a 1 minuto: un pallino provvisorio per ogni minuto e il pallino definitivo a ogni chiusura di barra, ciascuno nel livello in cui eri (la zona dell'ultima barra chiusa). Il riepilogo elenca tutti gli aggiornamenti con orario, pallino e punti (nel riepilogo i provvisori contano come gli altri), più direzione di QQQ, zone, pieni (+100), contro la luce (−100), punti totali e media a sparo, e somma tutto al punteggio con un nemico eliminato per aggiornamento. A pagina chiusa non esiste dettaglio sotto il minuto. Tocca lo schermo per chiudere; il testo resta nel riquadro sotto. L'ultimo sguardo è salvato nel browser (localStorage).</p>
+<p class="m"><b>Distanza del nemico = forza della variazione.</b> A ogni aggiornamento si misura quanto sono cambiati l'RSI e il prezzo rispetto all'aggiornamento prima (alla chiusura: rispetto alla barra prima). Ciascuno è diviso per il suo valore tipico (90° percentile delle variazioni per barra, ultime 300 barre) e limitato a 1; la forza è la media dei due. Forza bassa: nemico vicino. Forza alta: nemico lontano. Per gli aggiornamenti dentro la barra la scala è ridotta con la radice del tempo trascorso, perché in pochi secondi i movimenti sono più piccoli (convenzione mia). Conta il modulo del cambiamento, non il verso.</p>
+<p class="m"><b>Munizioni.</b> Ogni aggiornamento crea un pallino nuovo e lo spara: alla chiusura di una barra spara il pallino della barra appena chiusa, a ogni aggiornamento del prezzo spara il pallino provvisorio della barra in formazione. Non si riciclano pallini vecchi. Ogni evento fa comparire un nemico davanti al protagonista, a distanza, e il pallino lo uccide: puoi vedere il proiettile viaggiare, grande e lento, con la scritta «SPARATO · tipo · colore · orario».</p>
+<label>Barre (timeframe)<select id="cfgTF"><option value="1">1 minuto</option><option value="5">5 minuti · predefinito</option><option value="15">15 minuti</option></select></label>
+<label>Quando compare un nemico<select id="cfgRIT"><option value="dato">A ogni aggiornamento (barra chiusa o prezzo cambiato)</option><option value="barra">Solo a ogni barra chiusa</option></select></label>
+<label>Sessione di mercato<select id="cfgSES"><option value="ext">Estesa: pre-market e after-hours inclusi (predefinita)</option><option value="reg">Solo sessione regolare</option></select></label>
+<label>Sensibilità (barre per v e a, non usata nel gioco)<select id="cfgK"><option value="2">2</option><option value="3" selected>3</option><option value="5">5</option></select></label>
+<button class="s" id="demo" type="button">Modalità: dati reali (tocca per provare i livelli)</button> <button class="s" id="now" type="button">Aggiorna dati ora</button>
+<p class="m" id="st" role="status"></p>
+<p class="m"><b>Limiti.</b> È un gioco grafico, non un segnale operativo. Worker e Yahoo non sono verificati da qui; il MACD segue lo script Pine ma non è confrontato barra per barra con TradingView; le soglie (RSI 50, prezzo su 6 barre, soglia 0,02%) sono convenzioni mie non calibrate.</p>
+</details>
+</main>
+<script>var GC=(function(){
+'use strict';
+const GC={}, fin=Number.isFinite;
+GC.hash=function(s){ let h1=0x811c9dc5,h2=0x1b873593; for(let i=0;i<s.length;i++){ const c=s.charCodeAt(i); h1^=c; h1=Math.imul(h1,16777619)>>>0; h2=Math.imul(h2^c,2246822519)>>>0; h2=((h2<<13)|(h2>>>19))>>>0; } return h1.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0'); };
+GC.IndSrc={
+strip(code){ return String(code).replace(/\r/g,'').replace(/\/\/[^\n]*/g,''); },
+analyze(code){
+const r={ok:false,reasons:[],params:{},uses:[],outputs:[],states:[],codeHash:null,version:null,notes:[]};
+if(!code||!String(code).trim()){ r.reasons.push('nessun codice incollato'); return r; }
+const s=this.strip(code), need=(c,m)=>{ if(!c) r.reasons.push(m); return !!c; };
+r.codeHash=GC.hash(s.replace(/\s+/g,' ').trim());
+const mv=/\/\/\s*@version\s*=\s*(\d+)/.exec(String(code)); r.version=mv?+mv[1]:null;
+const tup=/\[\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\]\s*=\s*ta\.requestVolumeDelta\s*\(\s*(\w+)\s*\)/.exec(s);
+if(!need(tup,'manca [open,max,min,last] = ta.requestVolumeDelta(timeframe)')) return r;
+const [,vO,vX,vN,vL,vTf]=tup;
+const src=new RegExp('(\\w+)\\s*=\\s*(\\w+)\\s*\\?\\s*\\(\\s*(\\w+)\\s*\\+\\s*(\\w+)\\s*\\)\\s*/\\s*2\\s*:\\s*(\\w+)').exec(s);
+if(!need(src&&src[5]===vL&&((src[3]===vX&&src[4]===vN)||(src[3]===vN&&src[4]===vX)),'sorgente delle bande non riconosciuta: attesa  X = flagWick ? (max+min)/2 : last')) return r;
+const [,vSrc,vWick]=src;
+const ema=new RegExp('(\\w+)\\s*=\\s*ta\\.ema\\(\\s*'+vSrc+'\\s*,\\s*(\\w+)\\s*\\)').exec(s);
+const sd=new RegExp('(\\w+)\\s*=\\s*ta\\.stdev\\(\\s*'+vSrc+'\\s*,\\s*(\\w+)\\s*\\)').exec(s);
+if(!need(ema&&sd&&ema[2]===sd[2],'attesi ta.ema e ta.stdev sulla stessa sorgente e con la stessa lunghezza')) return r;
+const [,vEma,vLen]=ema, vStd=sd[1];
+const up=new RegExp('(\\w+)\\s*=\\s*'+vEma+'\\s*\\+\\s*(\\w+)\\s*\\*\\s*'+vStd).exec(s), lo=new RegExp('(\\w+)\\s*=\\s*'+vEma+'\\s*-\\s*(\\w+)\\s*\\*\\s*'+vStd).exec(s);
+if(!need(up&&lo&&up[2]===lo[2],'attese bande  ema ± mult*stdev')) return r;
+const [,vUp,vMult]=up, vLo=lo[1];
+const fn=/(\w+)\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)\s*=>/.exec(s);
+if(!need(fn,'funzione colore (val, upBand, lowBand) non trovata')) return r;
+const [,fName,pv,pu,pl]=fn;
+const colOk=new RegExp('if\\s+'+pv+'\\s*>\\s*0').test(s)&&new RegExp(pv+'\\s*>=\\s*'+pu).test(s)&&new RegExp(pv+'\\s*<=\\s*'+pl).test(s)&&new RegExp(fName+'\\s*\\(\\s*'+vL+'\\s*,\\s*'+vUp+'\\s*,\\s*'+vLo+'\\s*\\)').test(s);
+if(!need(colOk,'logica dei colori non riconosciuta (attesa: segno di last e confronto con le bande)')) return r;
+const num=(v,t)=>{ const m=new RegExp(v+'\\s*=\\s*input\\.'+t+'\\(\\s*([-\\d.]+)').exec(s); return m?+m[1]:null; };
+const len=num(vLen,'int'), mult=num(vMult,'float'), wick=new RegExp(vWick+'\\s*=\\s*input\\.bool\\(\\s*(true|false)').exec(s);
+if(!need(len!=null&&len>=1&&fin(len),'lunghezza Bollinger non leggibile')||!need(mult!=null&&fin(mult),'moltiplicatore non leggibile')||!need(!!wick,'flag wick non leggibile')) return r;
+const cu=/var\s+\w+\s*=\s*if\s+(\w+)/.exec(s), ctf=/(\w+)\s*=\s*input\.timeframe\(\s*"([^"]+)"/.exec(s), cflag=cu?new RegExp(cu[1]+'\\s*=\\s*input\\.bool\\(\\s*(true|false)').exec(s):null;
+const auto=/timeframe\.isintraday\s*"(\w+)"/.exec(s);
+if(!need(ctf&&cflag&&auto,'timeframe inferiore (custom/automatico) non leggibile')) return r;
+r.params={bbLength:Math.round(len),bbMult:mult,useWicks:wick[1]==='true',useCustomTF:cflag[1]==='true',customTF:ctf[2],autoLTF:auto[1]};
+r.uses=['ta.requestVolumeDelta','ta.ema (seed SMA)','ta.stdev (popolazione)'];
+r.outputs=[
+['openVolume','delta di volume all\'apertura della barra (continuo, con segno, unità di volume)'],
+['maxVolume / minVolume','massimo / minimo del delta cumulato nella barra (continui)'],
+['lastVolume','delta alla chiusura della barra: valore guida dei colori (continuo, non normalizzato)'],
+['emaValue, stdDev','EMA e deviazione standard su '+r.params.bbLength+' barre di '+(r.params.useWicks?'(max+min)/2':'lastVolume')],
+['upperBand / lowerBand','ema ± '+r.params.bbMult+'·stdev (non centrate sullo zero)']];
+r.states=[['bull_strong','last > 0 e last ≥ upperBand'],['bull_weak','last > 0 e last < upperBand'],['bear_strong','last ≤ 0 e last ≤ lowerBand'],['bear_weak','last ≤ 0 e last > lowerBand (last = 0 incluso: nessuno stato neutrale nel codice)']];
+r.notes.push('Il delta riparte da zero a ogni barra: ogni barra chiusa è un\'osservazione.','Le bande esistono solo dopo '+r.params.bbLength+' barre valide (stdev).','Timeframe inferiore per grafici intraday (1H, 4H): '+(r.params.useCustomTF?r.params.customTF:r.params.autoLTF)+' minuti.');
+r.ok=true; return r;
+}
+};
+GC.IndCalc=function(p,st){
+const L=p.bbLength, alpha=2/(L+1); st=st||{win:[],n:0,ema:null,seed:0};
+function push(bar){
+const x=p.useWicks?(bar.mx+bar.mn)/2:bar.l;
+st.win.push(x); if(st.win.length>L) st.win.shift(); st.n++;
+if(p.seed==='first'){ st.ema=st.n===1?x:alpha*x+(1-alpha)*st.ema; if(st.n<L) return {ready:false,n:st.n}; }
+else{
+if(st.n<L){ st.seed+=x; return {ready:false,n:st.n}; }
+if(st.n===L){ st.seed+=x; st.ema=st.seed/L; } else st.ema=alpha*x+(1-alpha)*st.ema;
+}
+let m=0; for(const y of st.win) m+=y; m/=L; let v=0; for(const y of st.win) v+=(y-m)*(y-m);
+const std=Math.sqrt(v/L), upper=st.ema+p.bbMult*std, lower=st.ema-p.bbMult*std, val=bar.l;
+const state=val>0?(val>=upper?'bull_strong':'bull_weak'):(val<=lower?'bear_strong':'bear_weak');
+return {ready:true,n:st.n,ema:st.ema,std,upper,lower,state};
+}
+return {push,state:st};
+};
+GC.Series={
+parseTime(x){ if(x==null||x==='') return NaN; if(typeof x==='number') return x>=1e11?x/1000:x; const s=String(x).trim(); if(/^-?\d+(\.\d+)?$/.test(s)){ const n=+s; return n>=1e11?n/1000:n; } const d=Date.parse(s); return isNaN(d)?NaN:d/1000; },
+num(x){ if(x==null) return null; if(typeof x==='number') return fin(x)?x:null; const s=String(x).trim().replace(/\s/g,''); if(s===''||/^(na|nan|null|undefined|-)$/i.test(s)) return null; const n=+s.replace(',','.'); return fin(n)?n:null; },
+parseText(text){
+const out={rows:[],errors:[]}; text=String(text||'').trim(); if(!text){ out.errors.push('testo vuoto'); return out; }
+const alias={t:'time',time:'time',timestamp:'time',date:'time',datetime:'time',o:'o',open:'o',openvolume:'o',max:'mx',high:'mx',maxvolume:'mx',h:'mx',min:'mn',low:'mn',minvolume:'mn',last:'l',close:'l',lastvolume:'l',c:'l',delta:'l',ema:'ema',emavalue:'ema',bollingerema:'ema',basis:'ema',upper:'up',upperband:'up',lower:'lo',lowerband:'lo'};
+let objs=null;
+if(text[0]==='['||text[0]==='{'){ try{ let j=JSON.parse(text); if(!Array.isArray(j)) j=j.data||j.bars||j.rows; if(!Array.isArray(j)) throw 0; objs=j.map(r=>{ if(Array.isArray(r)) return {time:r[0],o:r[1],mx:r[2],mn:r[3],l:r[4],ema:r[5],up:r[6],lo:r[7]}; const o={}; for(const k in r){ const a=alias[k.toLowerCase().replace(/[\s_]/g,'')]; if(a) o[a]=r[k]; } return o; }); }catch(e){ out.errors.push('JSON non valido'); return out; } }
+else{
+const lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean), d=[';','\t',','].find(c=>lines[0].includes(c))||',', cells=lines.map(l=>l.split(d).map(x=>x.trim().replace(/^"|"$/g,'')));
+let map=null, start=0; const h=cells[0].map(c=>alias[c.toLowerCase().replace(/[\s_]/g,'')]);
+if(h.filter(Boolean).length>=4){ map=h; start=1; } else if(isNaN(GC.Series.parseTime(cells[0][0]))&&cells[0].length>=5){ map=['time','o','mx','mn','l']; start=1; } else map=['time','o','mx','mn','l'];
+if(!(map.includes('time')&&map.includes('l')&&map.includes('mx')&&map.includes('mn')&&map.includes('o'))){ out.errors.push('colonne richieste: time, open, max, min, last'); return out; }
+objs=cells.slice(start).map(c=>{ const o={}; map.forEach((k,i)=>{ if(k) o[k]=c[i]; }); return o; });
+}
+for(const o of objs){ const row={t:GC.Series.parseTime(o.time),o:GC.Series.num(o.o),mx:GC.Series.num(o.mx),mn:GC.Series.num(o.mn),l:GC.Series.num(o.l)}; if('ema' in o||'up' in o||'lo' in o){ row.ema=GC.Series.num(o.ema); row.up=GC.Series.num(o.up); row.lo=GC.Series.num(o.lo); } out.rows.push(row); }
+return out;
+},
+mergeSources(fine,coarse,gFine,gCoarse){
+const m=new Map(); for(const b of coarse) m.set(b.t,Object.assign({},b,{g:gCoarse}));
+for(const b of fine){ const o=m.get(b.t), fb=Object.assign({},b,{g:gFine}); if(!o||b.valid||!(o.valid&&o.closed)) m.set(b.t,fb); }
+return [...m.keys()].sort((a,b)=>a-b).map(t=>m.get(t)); },
+normalize(rows,stepSec,opt){
+opt=Object.assign({maxGapSec:120*3600},opt||{});
+const rep={input:rows.length,dup:0,unsorted:false,missing:0,incoherent:0,badTs:0,closures:0,gaps:[]}, map=new Map(); let prev=-Infinity;
+for(const r of rows){ if(!fin(r.t)){ rep.badTs++; continue; } if(r.t<prev) rep.unsorted=true; prev=r.t; if(map.has(r.t)) rep.dup++; map.set(r.t,r); }
+const ts=[...map.keys()].sort((a,b)=>a-b), bars=[];
+for(let i=0;i<ts.length;i++){
+const r=map.get(ts[i]); let valid=[r.o,r.mx,r.mn,r.l].every(x=>x!=null&&fin(x));
+if(!valid) rep.missing++;
+else{ const tol=1e-9*(Math.abs(r.mx)+Math.abs(r.mn)+1); if(r.mx<Math.max(r.o,r.l)-tol||r.mn>Math.min(r.o,r.l)+tol){ valid=false; rep.incoherent++; } }
+bars.push({t:ts[i],o:r.o,mx:r.mx,mn:r.mn,l:r.l,valid,closed:r.closed,cov:r.cov,kind:r.kind,g:r.g,ema:r.ema,up:r.up,lo:r.lo,px:r.px,pxA:r.pxA});
+if(i>0){ const g=ts[i]-ts[i-1]; if(g>stepSec*1.5){ if(g>opt.maxGapSec) rep.gaps.push({from:ts[i-1],to:ts[i]}); else rep.closures++; } }
+}
+return {bars,report:rep};
+}
+};
+GC.Sessions={
+offsetSec(tz,utcMs){ const p=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(new Date(utcMs)), g=k=>+p.find(x=>x.type===k).value;
+return (Date.UTC(g('year'),g('month')-1,g('day'),g('hour'),g('minute'),g('second'))-Math.floor(utcMs/1000)*1000)/1000; },
+zonedToUtc(y,m,d,hh,mm,tz){ let ms=Date.UTC(y,m-1,d,hh,mm); for(let i=0;i<3;i++) ms=Date.UTC(y,m-1,d,hh,mm)-GC.Sessions.offsetSec(tz,ms)*1000; return ms/1000; },
+localDate(tz,tSec){ const p=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(tSec*1000)); return p; },
+nyseRegular(tz,tSec){ const [y,m,d]=GC.Sessions.localDate(tz,tSec).split('-').map(Number); return [GC.Sessions.zonedToUtc(y,m,d,9,30,tz),GC.Sessions.zonedToUtc(y,m,d,16,0,tz)]; },
+nyseExtended(tz,tSec){ const [y,m,d]=GC.Sessions.localDate(tz,tSec).split('-').map(Number), z=(h,mi)=>GC.Sessions.zonedToUtc(y,m,d,h,mi,tz); return [[z(4,0),z(9,30),'pre'],[z(9,30),z(16,0),'regular'],[z(16,0),z(20,0),'post']]; },
+fromMeta(meta){ const tp=meta&&meta.tradingPeriods; if(!tp) return []; const groups=Array.isArray(tp)?{regular:tp}:tp, out=[];
+for(const kind of ['pre','regular','post']){ const arr=groups[kind]; if(!Array.isArray(arr)) continue; for(const day of arr) for(const s of (Array.isArray(day)?day:[day])) if(s&&fin(s.start)&&fin(s.end)&&s.end>s.start) out.push([s.start,s.end,kind]); }
+return out.sort((a,b)=>a[0]-b[0]); }
+};
+GC.Adapter={
+prepare(ltf,ltfSec,nowSec,capEnd){
+const rep={received:ltf.length,badTs:0,dup:0,conflict:0,unsorted:0,unfinished:0,nullRows:0,modeStep:null,stepMismatch:false}, m=new Map(); let mx=-Infinity;
+for(const b of ltf){ if(!b||typeof b.t!=='number'||!fin(b.t)){ rep.badTs++; continue; } if(b.t<mx) rep.unsorted++; else mx=b.t;
+const old=m.get(b.t); if(old){ if(old.o===b.o&&old.c===b.c&&old.v===b.v) rep.dup++; else rep.conflict++; } m.set(b.t,b); }
+const ts=[...m.keys()].sort((x,y)=>x-y), bars=[], hist=new Map();
+for(let i=0;i<ts.length;i++){ const b=m.get(ts[i]); if(i>0){ const g=ts[i]-ts[i-1]; if(g<=3600) hist.set(g,(hist.get(g)||0)+1); }
+{ let e=b.t+ltfSec; if(capEnd){ const c=capEnd(b.t); if(c!=null&&c<e) e=c; } if(e>nowSec){ rep.unfinished++; continue; } }
+if(!(fin(b.o)&&fin(b.c)&&fin(b.v)&&b.v>=0)) rep.nullRows++;
+bars.push(b); }
+let best=0; for(const [g,c] of hist) if(c>best){ best=c; rep.modeStep=g; } rep.stepMismatch=rep.modeStep!=null&&rep.modeStep!==ltfSec;
+return {bars,rep};
+},
+approxDelta(ltf,stepSec,ltfSec,opt){
+opt=Object.assign({tzOffsetSec:0,tz:null,sessions:null,nowSec:Date.now()/1000,sessEnd:null,minCov:.9,badTol:0,settleSec:ltfSec+120,ext:{pre:false,post:false}},opt||{});
+const raw0=ltf;
+const wantK=k=>k==='regular'||(k==='pre'&&opt.ext.pre)||(k==='post'&&opt.ext.post), wantExt=opt.ext.pre||opt.ext.post;
+let sess=opt.sessions&&opt.sessions.length?opt.sessions.filter(s=>wantK(s[2]||'regular')).sort((a,b)=>a[0]-b[0]):null, mode='metadati';
+if(sess&&!sess.length) sess=null;
+if(sess&&wantExt&&!opt.sessions.some(s=>s[2]&&s[2]!=='regular')) sess=null;
+if(!sess&&opt.tz==='America/New_York'&&raw0.length){ const seen=new Map(); for(const b of raw0){ if(!b||typeof b.t!=='number'||!fin(b.t)) continue; const d=GC.Sessions.localDate(opt.tz,b.t); if(!seen.has(d)) seen.set(d,GC.Sessions.nyseExtended(opt.tz,b.t)); } sess=[...seen.values()].flat().filter(s=>wantK(s[2])).sort((a,b)=>a[0]-b[0]); mode='regola NYSE '+(opt.ext.pre?'4:00':'9:30')+'–'+(opt.ext.post?'20:00':'16:00')+' (ora legale inclusa), non da metadati'; }
+if(!sess) mode='prima barra del giorno (NON verificato con la sessione ufficiale)';
+const sIdx=t=>{ let lo=0,hi=sess.length-1; while(lo<=hi){ const m=(lo+hi)>>1; if(t<sess[m][0]) hi=m-1; else if(t>=sess[m][1]) lo=m+1; else return m; } return -1; };
+const pr=GC.Adapter.prepare(raw0,ltfSec,opt.nowSec,sess?(t=>{ const i=sIdx(t); return i<0?null:sess[i][1]; }):null); ltf=pr.bars;
+const hasVol=ltf.some(b=>b&&fin(b.v)&&b.v>0), rangeMode=opt.volMode==='range'||(opt.volMode==='auto'&&ltf.length>0&&!hasVol);
+const bk=new Map(); let prevDir=0, curDay=null, dayFirst=0, ambig=0, outside=0;
+for(const b of ltf){
+let key,day,sEnd=null;
+if(sess){ const i=sIdx(b.t); if(i<0){ outside++; continue; } day=i; sEnd=sess[i][1]; key=sess[i][0]+Math.floor((b.t-sess[i][0])/stepSec)*stepSec; }
+else{ day=Math.floor((b.t+opt.tzOffsetSec)/86400); if(day!==curDay){ curDay=day; dayFirst=b.t; } key=dayFirst+Math.floor((b.t-dayFirst)/stepSec)*stepSec; }
+let B=bk.get(key); if(!B){ B={t:key,cum:0,mx:0,mn:0,n:0,bad:0,day,sEnd,kind:sess?(sess[day][2]||'regular'):'regular'}; bk.set(key,B); }
+if(fin(b.o)&&fin(b.c)){ const hh=fin(b.hi)?Math.max(b.hi,b.o,b.c):Math.max(b.o,b.c), ll=fin(b.lo)?Math.min(b.lo,b.o,b.c):Math.min(b.o,b.c); if(!(fin(b.hi)&&fin(b.lo))) B.pa=true; if(B.po==null) B.po=b.o; B.pc=b.c; B.ph=B.ph==null?hh:Math.max(B.ph,hh); B.pl=B.pl==null?ll:Math.min(B.pl,ll); }
+if(!(fin(b.o)&&fin(b.c)&&(rangeMode||(fin(b.v)&&b.v>=0)))){ B.bad++; continue; }
+const dir=b.c>b.o?1:b.c<b.o?-1:prevDir; if(b.c===b.o) ambig++; if(b.c!==b.o) prevDir=dir;
+const wgt=rangeMode?((fin(b.hi)&&fin(b.lo))?Math.max(b.hi,b.o,b.c)-Math.min(b.lo,b.o,b.c):Math.abs(b.c-b.o)):b.v;
+B.cum+=dir*wgt; if(B.cum>B.mx) B.mx=B.cum; if(B.cum<B.mn) B.mn=B.cum; B.n++;
+}
+const keys=[...bk.keys()].sort((a,b)=>a-b), out=[], rec=Object.assign({},pr.rep,{outside,used:0,buckets:keys.length,definitive:0,provisional:0,rejected:0,lowCov:0,absentReg:0});
+keys.forEach((k,i)=>{ const B=bk.get(k), last=i===keys.length-1, nxt=last?null:bk.get(keys[i+1]), dayEnd=last||nxt.day!==B.day;
+const endT=B.sEnd!=null?Math.min(B.sEnd,k+stepSec):k+stepSec, exp=B.sEnd!=null?Math.max(1,Math.round((endT-k)/ltfSec)):stepSec/ltfSec;
+const cov=B.n/exp, full=B.bad===0&&B.n>=exp, ethB=B.kind!=='regular';
+const settled=full||opt.nowSec>=endT+opt.settleSec, closed=!last||(opt.nowSec>=endT&&settled)||(opt.sessEnd!=null&&opt.nowSec>=opt.sessEnd+opt.settleSec);
+const covOk=ethB||(B.sEnd==null&&dayEnd)||cov>=opt.minCov, base=B.bad<=opt.badTol&&B.n>0, valid=closed?(base&&covOk):base;
+rec.used+=B.n+B.bad; if(closed){ if(valid){ rec.definitive++; if(!ethB&&cov<1) rec.lowCov++; } else rec.rejected++; } else rec.provisional++;
+if(!last&&!ethB&&nxt.day===B.day&&nxt.kind==='regular'){ const g=Math.round((keys[i+1]-k)/stepSec)-1; if(g>0) rec.absentReg+=g; }
+out.push({t:k,o:0,mx:valid?B.mx:null,mn:valid?B.mn:null,l:valid?B.cum:null,closed,cov,kind:B.kind,n:B.n,exp,full,px:B.po==null?null:[B.po,B.ph,B.pl,B.pc],pxA:!!B.pa});
+});
+out.ambig=ambig; out.outside=outside; out.volMode=rangeMode?'range':'real'; out.rec=rec; out.nExt=out.filter(b=>b.kind!=='regular').length; out.align=mode; out.nSess=sess?sess.length:null; return out;
+}
+};
+GC.Yahoo={
+parse(j,opt){
+opt=Object.assign({sym:null,iv:null},opt||{}); const E=(code,msg)=>({ok:false,code,msg});
+if(j==null||typeof j!=='object'||Array.isArray(j)) return E('malformed','la risposta non è un oggetto JSON');
+const ch=j.chart; if(ch==null||typeof ch!=='object') return E('malformed','manca l\'oggetto «chart» (il Worker non inoltra una risposta Yahoo?)'+(j.error?': '+String(j.error.description||j.error.message||j.error).slice(0,120):''));
+if(ch.error) return E('provider','Yahoo segnala un errore: '+String(ch.error.description||ch.error.code||'sconosciuto').slice(0,160));
+const res=Array.isArray(ch.result)?ch.result[0]:null; if(!res||typeof res!=='object') return E('empty','nessun risultato per questo simbolo/intervallo');
+const meta=res.meta&&typeof res.meta==='object'?res.meta:{};
+if(opt.sym&&meta.symbol&&String(meta.symbol).toUpperCase()!==String(opt.sym).toUpperCase()) return E('symbol','simbolo restituito «'+meta.symbol+'» invece di «'+opt.sym+'»');
+const gnorm=x=>String(x).toLowerCase()==='1h'?'60m':String(x).toLowerCase(); if(opt.iv&&meta.dataGranularity&&gnorm(meta.dataGranularity)!==gnorm(opt.iv)) return E('interval','granularità restituita «'+meta.dataGranularity+'» invece di «'+opt.iv+'»: i dati non vengono usati');
+const ts=res.timestamp; if(ts==null||(Array.isArray(ts)&&ts.length===0)) return E('empty','nessuna barra nell\'intervallo richiesto (mercato chiuso o storico non disponibile)');
+if(!Array.isArray(ts)) return E('malformed','«timestamp» non è una lista');
+const q=res.indicators&&Array.isArray(res.indicators.quote)?res.indicators.quote[0]:null; if(!q||typeof q!=='object') return E('malformed','manca «indicators.quote»');
+for(const f of ['open','close','volume']){ if(!Array.isArray(q[f])) return E('malformed','campo «'+f+'» assente o non è una lista'); if(q[f].length!==ts.length) return E('length','«'+f+'» ha '+q[f].length+' valori contro '+ts.length+' timestamp: serie non allineate, scartata'); }
+const bars=[], st={rows:ts.length,badTs:0,nullRows:0}; const num=x=>typeof x==='number'&&fin(x)?x:null; const qh=Array.isArray(q.high)&&q.high.length===ts.length?q.high:null, ql=Array.isArray(q.low)&&q.low.length===ts.length?q.low:null;
+for(let i=0;i<ts.length;i++){ const t=ts[i]; if(typeof t!=='number'||!fin(t)||t<=0){ st.badTs++; continue; } const o=num(q.open[i]), c=num(q.close[i]), v=num(q.volume[i]); if(o==null||c==null||v==null) st.nullRows++; bars.push({t,o,c,v,hi:qh?num(qh[i]):null,lo:ql?num(ql[i]):null}); }
+if(!bars.length) return E('empty','tutti i timestamp sono non validi');
+return {ok:true,bars,meta,stats:st};
+}
+};
+GC.Prefs={
+KEY:'gc2|mig151',
+migrate(cur,legacy,done){
+const base=cur||legacy||null; if(done) return {prefs:base,migrated:false,changes:[]};
+const p=Object.assign({},base||{}), ch=[]; if(base&&base.mode==='import') ch.push('modalità Import → Worker'); if(base&&base.auto===false) ch.push('AUTO START disattivato → attivo'); if(base&&base.bf===false) ch.push('backfill 60m disattivato → attivo');
+p.mode='worker'; p.auto=true; p.bf=true; return {prefs:p,migrated:true,changes:ch};
+},
+retryMs(attempts){ return [10,30,120,360][Math.max(0,Math.min(attempts-1,3))]*60000; }
+};
+GC.Galaxy={
+cond(o){ return !!o&&o.status==='ok'&&(o.lim!==0||o.movDir!==0); },
+state(x){
+const A=(code,label,why)=>({code,label,why});
+if(x.used<=0&&x.connErr) return A('errore','Errore','dati non disponibili: '+x.connErr);
+if(x.used<=0&&!x.hasData) return A('attesa','In attesa dei dati','nessun dato ancora elaborato');
+if(x.used<x.L) return A('warmup','Warm-up in corso',x.used+'/'+x.L+' barre valide');
+if(!x.lastOk) return A('errore','Errore','ultima osservazione non calcolabile');
+if(x.level!=='ready') return A('pronta','Pronta','indicatore pronto ma dati incompleti/non aggiornati: nessuna attivazione valutata');
+return GC.Galaxy.cond(x.obs)?A('attiva','Attiva','condizione di attivazione presente'):A('nessuna','Nessuna condizione di attivazione','dinamica neutrale');
+}
+};
+GC.TF=(function(){
+const DEF={K:12,P:8,H:2,Nc:4,Ntr:6,cool:3,atrLen:14,stopM:3,tightM:1.5,maxGapH:120,alignA:10,pbWin:6,opp:4,sq:true,sqW:48,sqR:.9,sqOff:.97,sqDist:.25,sqWin:12};
+const effDir=o=>o.movDir!==0?o.movDir:(o.lim||0);
+const fresh=()=>({v:1,lastT:null,chk:null,win:[],regime:'UNCERTAIN',since:null,cand:'UNCERTAIN',candN:0,trendDir:0,trBars:0,pc:null,trs:[],atr:null,wd:[],sq:{on:false,since:null,ratio:null,endT:null,endN:0,brk:{}},zn:null,zh:[],pos:null,cool:0,needPb:false,exitDir:0,events:[],issue:'warm-up',n:0,lastC:null,lastH:null,lastL:null,q:null});
+const pxOk=px=>Array.isArray(px)&&px.length===4&&px.every(x=>typeof x==='number'&&isFinite(x))&&px[1]>=px[2]-1e-12&&px[0]>0;
+function classify(win,C){
+let u=0,d=0,z=0,sc=0,prev=0; for(const w of win){ if(w.e>0) u++; else if(w.e<0) d++; else z++; if(w.e!==0){ if(prev!==0&&w.e!==prev) sc++; prev=w.e; } }
+let cand; if(u>=C.P&&d<=1) cand='UP'; else if(d>=C.P&&u<=1) cand='DOWN'; else if(z>=C.P||sc>=3) cand='SIDEWAYS'; else cand='MIXED';
+return {cand,u,d,z,sc};
+}
+function quality(win,dir,C){
+const cur=win[win.length-1], last3=win.slice(-3), last4=win.slice(-C.opp), strong=dir>0?'bull_strong':'bear_strong', side=dir>0?'bull':'bear';
+const conflict=[]; if(last4.some(w=>w.e===-dir)) conflict.push('barra con movimento opposto nelle ultime '+C.opp); if(cur.press===-dir) conflict.push('pressione opposta al trend'); if(cur.lim===-dir) conflict.push('galassie sul limite fisico opposto'); if(cur.dec) conflict.push('moto in decelerazione');
+const aligned=win.filter(w=>w.e===dir).length;
+const checks=[
+{k:'strong',ok:last3.some(w=>w.st===strong),t:'stato indicatore «'+strong.replace('_',' ')+'» in una delle ultime 3 barre'},
+{k:'press',ok:cur.press===dir,t:'pressione (R) nel verso del trend'},
+{k:'pers',ok:aligned>=C.alignA,t:'persistenza: '+aligned+'/'+win.length+' barre nel verso del trend (soglia '+C.alignA+')'},
+{k:'fast',ok:dir*cur.v>cur.dsdt,t:'movimento più rapido dell\'espansione strutturale (versione simmetrica)'},
+{k:'delta',ok:last3.filter(w=>String(w.st).indexOf(side)===0).length>=2,t:'segno del delta concorde in almeno 2 delle ultime 3 barre'}];
+const n=checks.filter(c=>c.ok).length, grade=conflict.length||n<3?'NO TRADE':n===5?'A+':n===4?'A':'B';
+return {grade,n,checks,conflict,aligned};
+}
+function Create(cfg,saved){
+const C=Object.assign({},DEF,cfg||{}); let S=saved&&saved.v===1?JSON.parse(JSON.stringify(saved)):fresh(); S.sqOn=C.sq; if(!S.wd) S.wd=[]; if(!S.zh) S.zh=[]; if(S.zn===undefined) S.zn=null; if(!S.sq) S.sq={on:false,since:null,ratio:null,endT:null,endN:0,brk:{}};
+const ev=(type,t,dir,price,extra)=>{ const e=Object.assign({id:type+'|'+dir+'|'+t,type,t,dir,price},extra||{}); if(!S.events.some(x=>x.id===e.id)){ S.events.push(e); if(S.events.length>120) S.events.shift(); } return e; };
+function exit(t,reason,price,kind){ const p=S.pos; const e=ev('EXIT',t,p.dir,price,{reason,kind,entry:p.entry,entryT:p.entryT,bars:p.bars,hist:S.hist||false}); S.exitDir=p.dir; S.needPb=true; S.cool=C.cool; S.pos=null; return e; }
+function squeeze(o){
+const q=S.sq, w=o.upper-o.lower; if(!(isFinite(w)&&w>0)){ q.ratio=null; return; }
+if(S.wd.length>=C.sqW){ const m=S.wd.reduce((a,b)=>a+b,0)/S.wd.length; q.ratio=w/m;
+if(!q.on&&q.ratio<=C.sqR){ q.on=true; q.since=o.t; q.endT=null; q.endN=0; q.brk={}; }
+else if(q.on&&q.ratio>=C.sqOff){ q.on=false; q.endT=o.t; q.endN=0; q.brk={}; }
+} else q.ratio=null;
+if(!q.on&&q.endT!=null){ if(q.endN>0||o.t>q.endT){ q.endN++; } if(isFinite(o.std)){ if(o.l>=o.upper+C.sqDist*o.std) q.brk[1]=true; if(o.l<=o.lower-C.sqDist*o.std) q.brk[-1]=true; } if(q.endN>C.sqWin) q.endT=null; }
+S.wd.push(w); if(S.wd.length>C.sqW) S.wd.shift();
+}
+function zone(o){
+if(!(isFinite(o.l)&&isFinite(o.ema)&&isFinite(o.std)&&o.std>0)){ S.zn=null; return; }
+const z=(o.l-o.ema)/o.std, zc=(z>=0?1:-1)*(Math.min(3,Math.floor(Math.abs(z)))+1), p=S.zn;
+S.zn={z,zc,since:p&&p.zc===zc?p.since:o.t,n:p&&p.zc===zc?p.n+1:1}; S.zh.push(zc); if(S.zh.length>C.K) S.zh.shift();
+}
+function push(o,px,opt){
+opt=opt||{}; if(!o||typeof o.t!=='number'||!isFinite(o.t)) return {skipped:true,events:[]};
+if(S.lastT!=null&&o.t<=S.lastT) return {skipped:true,events:[]};
+S.hist=!!opt.hist; const out={events:[]}, okBar=o.status==='ok', P=pxOk(px)?px:null;
+if(S.lastT!=null&&(o.t-S.lastT)/3600>C.maxGapH){ S.win=[]; S.pc=null; S.trs=[]; S.atr=null; S.wd=[]; S.zh=[]; S.zn=null; S.sq={on:false,since:null,ratio:null,endT:null,endN:0,brk:{}}; S.cand='UNCERTAIN'; S.candN=0; S.regime='UNCERTAIN'; S.trBars=0; S.issue='discontinuità dei dati'; }
+S.lastT=o.t; S.n++;
+const prevAtr=S.atr;
+if(P){ const tr=S.pc!=null?Math.max(P[1]-P[2],Math.abs(P[1]-S.pc),Math.abs(P[2]-S.pc)):P[1]-P[2]; S.trs.push(tr); if(S.trs.length>C.atrLen) S.trs.shift(); S.atr=S.trs.length===C.atrLen?S.trs.reduce((a,b)=>a+b,0)/C.atrLen:null; S.pc=P[3]; S.lastC=P[3]; S.lastH=P[1]; S.lastL=P[2]; }
+if(okBar){ S.win.push({t:o.t,e:effDir(o),press:o.pressDir,st:o.state,lim:o.lim,dec:!!o.decel,v:o.v,dsdt:o.dsdt,D:o.D});
+squeeze(o); zone(o); if(S.win.length>C.K) S.win.shift(); S.chk=o.D; S.issue=null; }
+else{ S.win=[]; S.wd=[]; S.zh=[]; S.zn=null; S.sq.on=false; S.sq.endT=null; S.sq.ratio=null; S.issue=o.status==='warmup'?'warm-up dell\'indicatore':'barra non valida / dati mancanti'; }
+const prevReg=S.regime;
+if(!okBar||S.win.length<C.K){ if(okBar) S.issue='finestra incompleta ('+S.win.length+'/'+C.K+' barre valide contigue)'; S.regime='UNCERTAIN'; S.cand='UNCERTAIN'; S.candN=0; }
+else{
+const cl=classify(S.win,C); S.q=cl; let cn=cl.cand; if(cn==='MIXED') cn=(S.regime==='UP'||S.regime==='DOWN'||S.regime==='TRANSITION')?'TRANSITION':'UNCERTAIN';
+if(cn===S.cand) S.candN++; else{ S.cand=cn; S.candN=1; }
+if(cn!==S.regime&&S.candN>=C.H){ if(S.regime==='UP'||S.regime==='DOWN'){ S.trendDir=S.regime==='UP'?1:-1; S.regime='TRANSITION'; } else S.regime=cn; }
+}
+if(S.regime!==prevReg) S.since=o.t; S.trBars=S.regime==='TRANSITION'?S.trBars+1:0;
+const cur=S.win[S.win.length-1], dirR=S.regime==='UP'?1:S.regime==='DOWN'?-1:0;
+if(S.cool>0) S.cool--;
+if(cur&&S.needPb&&cur.e!==S.exitDir) S.needPb=false;
+if(S.pos){
+const p=S.pos; p.bars++; let done=null;
+if(P){
+if(p.dir>0&&P[2]<=p.stop) done=exit(o.t,'stop di protezione',Math.min(p.stop,P[0]),'stop'); else if(p.dir<0&&P[1]>=p.stop) done=exit(o.t,'stop di protezione',Math.max(p.stop,P[0]),'stop');
+}
+if(!done&&okBar&&cur){
+const opp4=S.win.length>=C.Nc&&S.win.slice(-C.Nc).every(w=>w.e===-p.dir)&&S.win.slice(-C.Nc).some(w=>w.st===(p.dir>0?'bear_strong':'bull_strong'))&&cur.press===-p.dir;
+if(cur.lim===-p.dir) done=exit(o.t,'invalidazione del trend (galassie sul limite fisico opposto)',P?P[3]:S.lastC,'invalidazione');
+else if(dirR===-p.dir) done=exit(o.t,'inversione confermata (regime opposto)',P?P[3]:S.lastC,'inversione');
+else if(opp4) done=exit(o.t,'inversione confermata ('+C.Nc+' barre opposte con stato forte e pressione opposta)',P?P[3]:S.lastC,'inversione');
+else if(S.regime==='SIDEWAYS') done=exit(o.t,'deterioramento strutturale (mercato laterale)',P?P[3]:S.lastC,'deterioramento');
+else if(S.regime==='TRANSITION'&&S.trBars>=C.Ntr) done=exit(o.t,'deterioramento strutturale (transizione da '+S.trBars+' barre senza recupero)',P?P[3]:S.lastC,'deterioramento');
+}
+if(done) out.events.push(done);
+else{
+p.weak=!!(cur&&(cur.e!==p.dir||cur.press===-p.dir||cur.dec));
+if(P){ p.ext=p.dir>0?Math.max(p.ext,P[3]):Math.min(p.ext,P[3]); const m=S.regime==='TRANSITION'?C.tightM:C.stopM; if(S.atr!=null){ const ns=p.ext-p.dir*m*S.atr; p.stop=p.dir>0?Math.max(p.stop,ns):Math.min(p.stop,ns); } }
+if(S.regime==='TRANSITION'&&!p.reduced&&P&&p.dir*(P[3]-p.entry)>0){ p.reduced=true; out.events.push(ev('REDUCE',o.t,p.dir,P[3],{reason:'regime in TRANSITION con posizione in profitto: riduzione parziale facoltativa'})); }
+}
+}
+S.view=null;
+if(!S.pos&&okBar&&cur){
+const stage={dir:dirR,grade:'NO TRADE',missing:[],checks:[],conflict:[],level:'nessuno'};
+if(dirR){
+const q=quality(S.win,dirR,C); stage.grade=q.grade; stage.checks=q.checks; stage.conflict=q.conflict; stage.aligned=q.aligned;
+const trig=cur.e===dirR&&cur.press===dirR, m=stage.missing;
+if(S.cool>0) m.push('attesa di '+S.cool+' barre dopo l\'ultima uscita');
+if(S.needPb&&dirR===S.exitDir) m.push('serve un pullback (almeno una barra non allineata) dopo l\'uscita nello stesso verso');
+if(q.grade==='NO TRADE') m.push('qualità NO TRADE: '+(q.conflict.length?q.conflict.join('; '):'meno di 3 controlli su 5 soddisfatti'));
+if(C.sq&&S.sq.on) m.push('squeeze delle bande in corso (ampiezza '+(S.sq.ratio==null?'—':S.sq.ratio.toFixed(2))+'× la media): attendere l\'espansione');
+else if(C.sq&&S.sq.endT!=null&&!S.sq.brk[dirR]) m.push('dopo lo squeeze serve una chiusura decisa oltre la banda nel verso del trend (entro '+C.sqWin+' barre)');
+if(!trig) m.push('trigger: serve una barra chiusa con movimento e pressione nel verso del trend');
+if(!P||S.atr==null) m.push('prezzo/ATR('+C.atrLen+') non disponibili: stop non definibile');
+stage.level=q.grade==='NO TRADE'?'trend senza qualità':(C.sq&&S.sq.on)?'squeeze in corso':'setup confermato';
+if(!m.length){
+const pb=S.win.slice(-1-C.pbWin,-1).some(w=>w.e!==dirR), stop=P[3]-dirR*C.stopM*S.atr;
+S.pos={dir:dirR,entryT:o.t,entry:P[3],stop0:stop,stop,ext:P[3],bars:0,reduced:false,weak:false,grade:q.grade,kind:pb?'dopo pullback':'conferma del trend',atr:S.atr};
+out.events.push(ev('ENTRY',o.t,dirR,P[3],{grade:q.grade,kind:S.pos.kind,stop0:stop,atr:S.atr,hist:S.hist})); stage.level='ingresso operativo';
+}
+} else{
+const pv=S.win[S.win.length-2], reg=S.regime==='SIDEWAYS'?'mercato laterale: ingressi bloccati':S.regime==='TRANSITION'?'regime in transizione: nessun nuovo ingresso':'nessun trend confermato';
+if(S.cand==='UP'||S.cand==='DOWN'){ stage.level='setup in formazione'; stage.dir=S.cand==='UP'?1:-1; stage.missing.push('conferma del regime: '+S.candN+'/'+C.H+' barre consecutive con candidato '+S.cand); }
+else if(cur.e!==0&&pv&&pv.e===cur.e&&cur.st===(cur.e>0?'bull_strong':'bear_strong')&&pv.st===cur.st){ stage.level='segnale di attenzione'; stage.dir=cur.e; stage.missing.push(reg); }
+else stage.missing.push(reg);
+}
+S.view=stage;
+}
+return out;
+}
+function status(ctx){
+ctx=ctx||{ready:true,stale:false}; const lastEv=S.events[S.events.length-1], exitNow=!!(lastEv&&lastEv.type==='EXIT'&&lastEv.t===S.lastT&&!S.pos), v=S.view;
+let ops='WAIT', why=[], dir=S.pos?S.pos.dir:v?v.dir:0;
+if(S.pos){ ops=S.pos.dir>0?'LONG':'SHORT'; why.push(S.pos.weak?'trend indebolito ma ancora valido: pullback/decelerazione ignorati, la posizione resta aperta':'trend valido: si mantiene la posizione, lo stop segue il massimo/minimo'); if(!ctx.ready) why.push('⚠ motore non pronto o ultima barra non valida: la posizione resta aperta ma la valutazione NON è aggiornata (verifica i dati)'); }
+else if(!ctx.ready){ why.push('motore non pronto (warm-up o dati insufficienti): nessun segnale'); }
+else if(exitNow){ ops='EXIT'; why.push('uscita '+lastEv.reason); }
+else if(S.issue){ why.push('nessun segnale: '+S.issue); }
+else if(v){ ops=v.level==='setup confermato'?'READY':(v.level==='trend senza qualità'||v.level==='squeeze in corso'||v.level==='setup in formazione'||v.level==='segnale di attenzione')?'WATCH':'WAIT'; why.push(v.level+(v.missing.length?' — manca: '+v.missing.join('; '):'')); }
+if(ctx.stale&&ctx.ready) why.push('⚠ dati non aggiornati: le valutazioni sono ferme all\'ultima barra chiusa');
+const strength=(S.regime==='UP'||S.regime==='DOWN')&&S.q?(()=>{ const a=S.regime==='UP'?S.q.u:S.q.d; return a>=C.alignA?'forte':a>=C.P?'media':'debole'; })():'—';
+const p=S.pos, R0=p?Math.abs(p.entry-p.stop0):0;
+return {ops,regime:S.regime,since:S.since,dir,strength,grade:S.pos?S.pos.grade:v?v.grade:'NO TRADE',checks:v?v.checks:[],missing:v&&!S.pos?v.missing:[],level:v?v.level:null,why,issue:S.issue,
+pos:p?Object.assign({},p,{pnlPct:S.lastC!=null?p.dir*(S.lastC-p.entry)/p.entry*100:null,rNow:S.lastC!=null&&R0>0?p.dir*(S.lastC-p.entry)/R0:null,rLocked:R0>0?p.dir*(p.stop-p.entry)/R0:null,price:S.lastC}):null,
+sq:Object.assign({enabled:C.sq,n:S.wd.length,need:C.sqW},S.sq),zn:S.zn?Object.assign({},S.zn,{hist:S.zh.slice(),counts:[-4,-3,-2,-1,1,2,3,4].reduce((m,k)=>(m[k]=S.zh.filter(x=>x===k).length,m),{})}):null,exit:exitNow?lastEv:null,lastEvent:lastEv||null,lastT:S.lastT,atr:S.atr,cool:S.cool,needPb:S.needPb,trBars:S.trBars,candN:S.candN,cand:S.cand,q:S.q};
+}
+return {push,status,cfg:C,get state(){ return S; },serialize(){ return JSON.stringify(S); },reset(){ S=fresh(); },quality:(w,d)=>quality(w,d,C),classify:w=>classify(w,C)};
+}
+Create.csv=function(events){
+const cols=['ora_utc','epoch','evento','verso','prezzo_teorico','qualita','tipo_ingresso','stop_iniziale','atr','motivo','ingresso','ingresso_epoch','barre_in_posizione','da_storico'];
+const q=v=>{ if(v==null) return ''; let s=typeof v==='number'?(isFinite(v)?String(v):''):String(v); if(/^[=+\-@\t\r]/.test(s)&&typeof v!=='number') s="'"+s; return /[;"\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+const rows=(events||[]).map(e=>[new Date(e.t*1000).toISOString(),e.t,e.type,e.dir>0?'LONG':'SHORT',e.price,e.grade,e.kind,e.stop0,e.atr,e.reason,e.entry,e.entryT,e.bars,e.hist?'si':'no'].map(q).join(';'));
+return [cols.join(';')].concat(rows).join('\r\n')+'\r\n';
+};
+Create.bandInfo=function(win,dir,Nc){
+const cur=win&&win[win.length-1]; if(!cur||!cur.st) return null; const st=String(cur.st), side=st.indexOf('bull')===0?1:st.indexOf('bear')===0?-1:0, strong=/strong$/.test(st);
+let streak=0; for(let i=win.length-1;i>=0&&win[i].e===-dir;i--) streak++;
+const last=win.slice(-Nc), strongOpp=last.length>=Nc&&last.some(w=>w.st===(dir>0?'bear_strong':'bull_strong'));
+return {st,side,strong,against:side===-dir&&dir!==0,favour:side===dir&&dir!==0,oppStreak:streak,need:Nc,strongOpp,pressOpp:cur.press===-dir};
+};
+Create.DEF=DEF; Create.effDir=effDir; return Create;
+})();
+GC.Advice={
+NOTE:'Segnale teorico di un metodo non validato: non è consulenza finanziaria.',
+make(x){
+x=x||{}; const s=x.s, ctx=x.ctx||{ready:true,stale:false}, sz=x.sz||null, f=v=>(+v).toFixed(2), R=x.risk||{};
+const out=(code,color,title,lines,warn)=>({code,color,title,lines:lines.filter(Boolean),warn:warn||[],note:GC.Advice.NOTE});
+if(!s) return out('NONE','i','IN ATTESA DEL MOTORE',['Nessun dato elaborato: nessuna indicazione.']);
+const warn=[]; if(!ctx.ready) warn.push('dati non pronti o ultima barra non valida: valutazione non aggiornata'); if(ctx.stale&&ctx.ready) warn.push('dati non aggiornati: verifica prima di operare');
+const p=s.pos;
+if(p){
+const nm=p.dir>0?'LONG':'SHORT';
+const le=s.lastEvent, recent=(x.now==null||(x.now-(p.entryT+3600))<=2*3600)&&!(le&&le.type==='ENTRY'&&le.t===p.entryT&&le.hist);
+if(p.entryT===s.lastT&&recent){
+let size; if(!sz) size='Dimensionamento non valido: controlla capitale e rischio'; else if(sz.kind==='und') size=sz.qty<1?'Quantità 0: il rischio ammesso non basta per 1 unità':'Quantità '+sz.qty+' (rischio '+R.rp+'% = '+f(sz.riskMoney)+')'; else size='Importo nel prodotto '+f(sz.productExposure)+' (leva '+R.lev+'×, rischio '+R.rp+'% = '+f(sz.riskMoney)+')';
+return out('ENTER_'+nm,p.dir>0?'g':'r','NUOVO SEGNALE: ENTRA '+nm,['Ingresso teorico '+f(p.entry)+' (chiusura barra); reale all\'apertura successiva · qualità '+p.grade,'Stop '+f(p.stop0)+' ('+f(Math.abs(p.entry-p.stop0)/p.entry*100)+'% dal prezzo) · nessun obiettivo fisso, lo stop segue il trend',size],warn);
+}
+const bd=x.band, bl=!bd?null:bd.against&&bd.strong?'ATTENZIONE: delta oltre la banda CONTRO la posizione ('+bd.oppStreak+'/'+bd.need+' barre opposte). Una barra da sola NON fa uscire: si esce con '+bd.need+' barre opposte, stato forte e pressione opposta, o per stop/invalidazione':bd.against?'Delta dalla parte opposta ma dentro le bande ('+bd.oppStreak+'/'+bd.need+' barre opposte): nessun allarme forte, si resta':bd.favour&&bd.strong?'Delta oltre la banda A FAVORE: conferma il trend, non è un segnale di uscita':'Delta dentro le bande: nessun allarme';
+return out('HOLD_'+nm,p.dir>0?'g':'r','TREND '+nm+' IN CORSO'+(p.weak?' (indebolito)':''),['Se SEI già dentro: MANTIENI · stop ora '+f(p.stop),'Se NON sei dentro: NON INSEGUIRE · ingresso teorico '+f(p.entry)+' ('+p.bars+' barre fa), ora '+(p.rNow!=null?(p.rNow>=0?'+':'')+f(p.rNow)+' R':'—'),p.reduced?'Riduzione parziale facoltativa già segnalata (regime in transizione)':null,bl],warn);
+}
+if(s.ops==='EXIT'&&s.exit){ const nm=s.exit.dir>0?'LONG':'SHORT'; return out('EXIT_'+nm,'y','ESCI: CHIUDI '+nm,['Motivo: '+s.exit.reason,'Se hai la posizione: chiudila (uscita teorica '+f(s.exit.price)+'). Se non ce l\'hai: non fare nulla','Nuovo ingresso solo dopo la pausa e un pullback'],warn); }
+if(!ctx.ready) return out('NONE','i','NON FARE NULLA',['Motore non pronto o dati non validi: nessun segnale.'],warn.slice(1));
+if(s.ops==='READY'){ const nm=s.dir>0?'LONG':'SHORT'; return out('READY_'+nm,'y','PRONTO '+nm+': NON ENTRARE ANCORA',['Setup confermato (qualità '+s.grade+'): si entra solo se una barra chiusa conferma','Fino ad allora non fare nulla'],warn); }
+const m=s.missing&&s.missing[0]; return out('WAIT','i','NON FARE NULLA',[s.issue?'Dati insufficienti: '+s.issue:'Motivo: '+(m?String(m).slice(0,110):'nessun trend confermato')],warn);
+}
+};
+GC.BandRadar={
+NOTE:'Lettura informativa di un metodo non validato: non è consulenza finanziaria. Il segnale resta quello del banner sulla tela.',
+project(x){
+x=x||{}; const dir=x.dir>0?1:x.dir<0?-1:0, N=x.n||3, dist=x.dist==null?.25:x.dist; if(!dir||!x.state||!x.model||!x.params) return null;
+let e; try{ e=GC.Engine(x.tf||'1H',x.model,x.params,JSON.parse(JSON.stringify(x.state))); }catch(err){ return null; }
+const l0=e.last(); if(!l0||!Number.isFinite(l0.D)||!Number.isFinite(l0.v)) return null;
+const M=e.cfg, eps=e.epsV, mov=o=>o.lim?0:Math.abs(o.v)>eps?Math.sign(o.v):0, now={D:l0.D,v:l0.v,mov:mov(l0),lim:l0.lim||0}, res=[], f2=v=>(+v).toFixed(2).replace('.',',');
+for(let i=0;i<N;i++){ const o=e.last(), thr=dir>0?o.upper+dist*o.std:o.lower-dist*o.std; if(!Number.isFinite(thr)) return null; e.push({t:o.t+(M.stepH||1)*3600,o:thr,mx:thr,mn:thr,l:thr,valid:true,cov:1,g:(M.stepH||1)*3600}); const r=e.last(); if(!r||r.t!==o.t+(M.stepH||1)*3600) return null; res.push({D:r.D,v:r.v,mov:mov(r),lim:r.lim||0}); }
+const a1=res[0], aN=res[N-1], arrow=dir>0?'▲':'▼', go=dir>0?'allontanarsi':'avvicinarsi', back=dir>0?'avvicinarsi':'allontanarsi';
+const txt=m=>m.lim?'ferme al limite':m.mov>0?'in allontanamento':m.mov<0?'in avvicinamento':'quasi ferme';
+let ph;
+if(now.lim===dir) ph='resterebbero al limite fisico, senza altro spazio';
+else if(a1.lim) ph='toccherebbero subito il limite fisico';
+else if(now.lim===-dir&&a1.mov!==dir) ph=`si staccherebbero appena dal limite ${dir>0?'minimo':'massimo'}, senza ancora ${go}`;
+else if(a1.mov===dir&&now.mov===dir) ph=`continuerebbero ad ${go}, più in fretta`;
+else if(a1.mov===dir) ph=`passerebbero ad ${go}`;
+else if(a1.mov===0&&now.mov===-dir) ph='si fermerebbero, ma non si invertirebbero ancora (inerzia)';
+else if(a1.mov===-dir) ph=`continuerebbero a ${back}, ma più piano (inerzia)`;
+else if(now.mov===dir) ph='rallenterebbero fino a fermarsi';
+else ph='resterebbero quasi ferme';
+const room=dir>0?M.Dmax-now.D:now.D-M.Dmin, roomN=dir>0?M.Dmax-aN.D:aN.D-M.Dmin;
+const rt=now.lim?`Sono già al limite fisico ${now.lim>0?'massimo':'minimo'}: non c'è spazio per andare oltre.`:`Spazio fino al limite fisico: ${f2(room)}${roomN<=.001?' (lo toccherebbero)':''}.`;
+const text=`Oggi le galassie sono ${txt(now)} (D ${f2(now.D)}). Con uno scatto ${arrow} di 1 ora ${ph}; dopo ${N} ore di scatto D passerebbe a ${f2(aN.D)} (${txt(aN)}). ${rt}`;
+return {dir,arrow,text,short:`con lo scatto ${arrow}: ${ph} (D ${f2(now.D)} → ${f2(aN.D)} in ${N} ore)`,phrase:ph,now,after:res,room,note:'Proiezione con la dinamica del motore (non calibrata né validata).'};
+},
+read(x){
+x=x||{}; const q=x.sq, C=Object.assign({sqWin:12,wide:1.3,sqR:.9,sqOff:.97,sqDist:.25},x.cfg||{}), f2=v=>(+v).toFixed(2).replace('.',','), dir=x.dir>0?1:x.dir<0?-1:0, N=GC.BandRadar.NOTE;
+const st=(a,b,c2,d)=>[{k:'①',t:'Bande strette (squeeze)',s:a},{k:'②',t:'Si riallargano',s:b},{k:'③',t:'Scatto: chiusura decisa oltre la banda',s:c2},{k:'④',t:'Ingresso, se il banner conferma',s:d}];
+const out=(code,color,title,act,say,steps,extra)=>Object.assign({code,color,title,act,say,steps,note:N,ratio:q&&q.ratio!=null?q.ratio:null},extra||{});
+const todo=st('todo','todo','todo','todo'), rt=q&&q.ratio!=null?f2(q.ratio)+'× la media':'';
+if(!q||!q.enabled) return out('OFF','i','Radar delle bande: filtro squeeze spento','Nessuna lettura','Il filtro squeeze è disattivato: l\'ampiezza delle bande non viene controllata.',todo);
+if(!(q.n>=q.need)||q.ratio==null) return out('MEASURE','i',`Radar delle bande: misura in corso (${q.n||0}/${q.need||48})`,'Aspetta','Servono '+(q.need||48)+' barre per sapere se le bande sono strette o larghe rispetto al solito.',todo);
+if(q.on) return out('SQUEEZE','y','BANDE STRETTE · squeeze','NON ENTRARE · aspetta',`Le bande sono strette (${rt}): le galassie possono sembrare molto agitate, ma è soprattutto rumore. Quando le bande sono strette, per ripartire serve una spinta decisa. Aspetta che si riallarghino e che arrivi lo scatto.`,st('now','todo','todo','todo'));
+if(q.endT!=null){
+const left=Math.max(0,C.sqWin-(q.endN||0)), up=!!(q.brk&&q.brk[1]), dn=!!(q.brk&&q.brk[-1]), any=up||dn, arrow=dir>0?'▲':dir<0?'▼':'';
+if(dir!==0&&q.brk&&q.brk[dir]) return out('BREAK','g',`SCATTO CONFERMATO ${arrow} nel verso del trend`,'INGRESSO CONSENTITO · se il banner conferma',`È arrivata una chiusura decisa oltre la banda ${dir>0?'superiore':'inferiore'}, nel verso del trend. L'ingresso è consentito solo se il banner sulla tela dice ENTRA (trend, qualità e dati a posto). Non inseguire se l'ora è passata.`,st('done','done','done','now'),{dir});
+if(any) return out('BREAK_OTHER','y','SCATTO NON UTILIZZABILE','NON ENTRARE',dir===0?'C\'è stata una chiusura decisa oltre la banda, ma il trend non è definito: nessun ingresso.':'C\'è stata una chiusura decisa oltre la banda, ma non nel verso del trend: nessun ingresso.',st('done','done','now','todo'),{});
+return out('WINDOW','y','DOPO LO SQUEEZE · cerca lo scatto','CERCA LO SCATTO',`Le bande si sono riallargate da ${q.endN||0} barre: restano ${left} barre di finestra. Entra solo se arriva una chiusura decisa oltre la banda nel verso del trend (e il banner dice ENTRA).`,st('done','done','now','todo'),{left});
+}
+if(q.ratio>=C.wide) return out('WIDE','i','BANDE LARGHE · spinta debole','NESSUN SETUP · pazienza',`Le bande sono larghe (${rt}): lo stesso delta spinge meno e le galassie si muovono piano. Servono spinte grandi per muoverle. Per cercare lo scatto aspetta il prossimo squeeze.`,todo);
+return out('NORMAL','i','BANDE NORMALI · nessun setup','NESSUN SETUP',`Le bande sono nella norma (${rt}): nessuna distorsione di scala. Per cercare lo scatto aspetta uno squeeze (bande ≤0,90× la media).`,todo);
+}
+};
+GC.Commentary={
+NOTE:'Commento automatico di un metodo non validato: non è consulenza finanziaria.',
+fmt(v){ if(!Number.isFinite(v)) return '—'; const a=Math.abs(v), s=v<0?'−':'+'; return s+(a>=1e6?(a/1e6).toFixed(2).replace('.',',')+'M':a>=1e4?Math.round(a/1e3)+'K':a>=1e3?(a/1e3).toFixed(2).replace(/0$/,'').replace('.',',')+'K':a.toFixed(a<10?2:0).replace('.',',')); },
+make(x){
+x=x||{}; const C=GC.Commentary, f2=v=>(+v).toFixed(2).replace('.',','), ob=(x.obs||[]).filter(o=>o&&o.status==='ok'), n=ob.length, ctx=x.ctx||{ready:true,stale:false};
+const out=(code,title,paras,warn,tech)=>({code,title,paras:paras.filter(p=>p&&p.t),tech:(tech||[]).filter(p=>p&&p.t),warn:warn||[],note:C.NOTE});
+if(!n) return out('NONE','Commento: in attesa dei dati',[{h:'Stato',t:'Nessuna barra elaborata: per ora non c\'è nulla da commentare.'}]);
+const o=ob[n-1], p=n>1?ob[n-2]:null, eps=Number.isFinite(x.epsV)?x.epsV:.0075, warn=[];
+if(!ctx.ready) warn.push('dati non pronti o ultima barra non valida: il commento riguarda l\'ultima barra valida'); else if(ctx.stale) warn.push('dati non aggiornati: il commento potrebbe essere superato');
+const bull=o.l>=0, strong=/strong/.test(o.state||''), nm=(bull?'bull':'bear')+(strong?' FORTE':' debole');
+const pos=bull?`${strong?'oltre':'sotto'} la banda superiore (${C.fmt(o.upper).replace('+','')})`:`${strong?'oltre':'sopra'} la banda inferiore (${C.fmt(o.lower)})`;
+const p1=`Delta ${C.fmt(o.l)}: ${pos} → ${nm}. ${strong?'Una barra oltre la banda è un segnale di forza, ma da sola non decide nulla.':'Dentro le bande: spinta ordinaria, non eccezionale.'}`;
+const pr=o.pressDir>0?'rialzista':o.pressDir<0?'ribassista':'equilibrata';
+const mv=o.lim?`sono ferme sul limite fisico ${o.lim>0?'massimo':'minimo'} di distanza`:o.movDir>0?'si stanno allontanando':o.movDir<0?'si stanno avvicinando':'sono quasi ferme (velocità sotto la soglia di neutralità)';
+let p2=`Pressione ${pr} (E ${f2(o.E)} · G ${f2(o.G)} · R ${o.R>=0?'+':''}${f2(o.R)}); le galassie ${mv}.`;
+if(!o.lim&&o.movDir!==0&&o.pressDir!==0&&o.movDir!==o.pressDir) p2+=' La pressione è opposta al movimento: il moto prosegue per inerzia e tende a rallentare. Per invertirlo serve una sequenza di barre nella nuova direzione, non una sola.';
+else if(p&&p.movDir!==0&&o.movDir===0&&!o.lim) p2+=' Il moto precedente si è fermato ma non si è invertito.';
+const W=ob.slice(-48), aMean=W.reduce((a,b)=>a+(b.A||0),0)/W.length, ra=aMean>0?o.A/aMean:null; let p3;
+if(ra!=null&&ra>=1.3) p3=`Bande più larghe del solito (A ${C.fmt(o.A).replace('+','')} = ×${f2(ra)} la media recente): lo stesso delta spinge meno e le galassie si muovono più piano.`;
+else if(ra!=null&&ra<=.75) p3=`Bande più strette del solito (A ${C.fmt(o.A).replace('+','')} = ×${f2(ra)} la media recente): lo stesso delta spinge di più e i movimenti possono risultare ingigantiti.`;
+else p3='Bande nella norma: nessuna distorsione di scala rilevante.';
+if(x.sq) p3+=' SQUEEZE attivo: movimento amplificato dalle bande strette, nessun nuovo ingresso finché non si riallargano.';
+const R6=ob.slice(-6), up=R6.filter(b=>b.l>0), dn=R6.filter(b=>b.l<0), sUp=up.filter(b=>/strong/.test(b.state||'')).length, sDn=dn.filter(b=>/strong/.test(b.state||'')).length;
+let run=0; for(let i=n-1;i>=0&&(ob[i].l>0)===(o.l>0)&&ob[i].l!==0;i--) run++;
+let p4=`Ultime ${R6.length} barre: ${up.length} di acquisto (${sUp} oltre banda) e ${dn.length} di vendita (${sDn} oltre banda).`; if(run>=3) p4+=` Sequenza di ${run===n?'almeno ':''}${run} barre consecutive di ${bull?'acquisto':'vendita'}.`;
+if(R6.some(b=>b.G>=2)&&R6.some(b=>b.E>=2)) p4+=' Nelle ultime barre sono comparse sia spinte di vendita sia di acquisto al massimo: movimento molto nervoso.';
+const dir=o.pressDir, aligned=o.movDir!==0&&o.movDir===dir, opposite=!o.lim&&o.movDir!==0&&dir!==0&&o.movDir!==dir;
+const s1=(bull?'Nell\'ultima ora hanno comprato più di quanti hanno venduto.':'Nell\'ultima ora hanno venduto più di quanti hanno comprato.')+(strong?' E la spinta è fortissima, più forte del solito.':' Ma è una spinta normale, niente di speciale.');
+let s2=o.lim?`Le due galassie sono arrivate in fondo alla loro corsa (le più ${o.lim>0?'lontane':'vicine'} possibile) e non possono andare oltre.`:o.movDir>0?'Le due galassie si stanno allontanando: è come se vincessero i compratori.':o.movDir<0?'Le due galassie si stanno avvicinando: è come se vincessero i venditori.':'Le due galassie sono quasi ferme: per ora non vince nessuno.';
+if(opposite) s2+=' Adesso però la spinta va dall\'altra parte. Le galassie sono come una bicicletta in discesa: non si fermano di colpo, prima rallentano. Una spinta sola non basta a farle girare.';
+else if(p&&p.movDir!==0&&o.movDir===0&&!o.lim) s2+=' Prima si muovevano, ora si sono fermate, ma non sono ancora tornate indietro.';
+else if(aligned) s2+=' La spinta va nello stesso verso: continuano così.';
+let s3='Le bande sono come un metro che misura se una spinta è grande o piccola. '+(ra!=null&&ra>=1.3?'Oggi il metro è largo: ci vuole una spinta più grande per muovere le galassie, quindi si muovono piano.':ra!=null&&ra<=.75?'Oggi il metro è stretto: anche una spinta piccola sembra grande, quindi le galassie sembrano più agitate di quanto sia davvero.':'Oggi il metro è normale: nessun trucco.');
+if(x.sq) s3+=' Attenzione: il metro si è stretto parecchio (squeeze). Meglio non iniziare nulla di nuovo finché non si riallarga.';
+const vt=k=>k===1?'1 volta':k+' volte'; let s4=`Nelle ultime ${R6.length} ore: ${vt(up.length)} hanno comprato di più e ${vt(dn.length)} hanno venduto di più.`+(sUp+sDn>0?` ${vt(sUp+sDn)} con una spinta fortissima.`:'')+(run>=3?` Da ${run===n?'almeno ':''}${run} ore di fila ${bull?'comprano':'vendono'} di più.`:'');
+if(R6.some(b=>b.G>=2)&&R6.some(b=>b.E>=2)) s4+=' Ci sono state spinte enormi da tutte e due le parti: il mercato è nervoso, meglio non fidarsi di una sola ora.';
+let s0; if(x.sq) s0='Meglio aspettare: non iniziare nulla di nuovo adesso.'; else if(o.lim||o.movDir===0) s0=dir===0?'Per ora non c\'è un vincitore chiaro: pazienza, si aspetta.':(dir>0?'Le galassie per ora non si muovono, ma la spinta è dei compratori. Si guarda cosa succede nelle prossime ore.':'Le galassie per ora non si muovono, ma la spinta è dei venditori. Si guarda cosa succede nelle prossime ore.'); else if(aligned) s0=o.movDir>0?'I compratori stanno vincendo.':'I venditori stanno vincendo.'; else if(dir===0) s0='Le galassie corrono ancora, ma senza più spinta: stanno per rallentare.'; else s0='La corsa va ancora in un verso, ma la spinta sta girando: guarda le prossime ore.';
+s0+=' Questo commento spiega soltanto: il segnale vero è il riquadro colorato sulla tela.';
+return out('OK','Commento alle galassie',[{h:'In soldoni',t:s0},{h:'Chi spinge?',t:s1},{h:'Cosa fanno le galassie?',t:s2},{h:'Il metro di oggi',t:s3},{h:'Ultime ore',t:s4}],warn,[{h:'Ultima barra',t:p1},{h:'Galassie',t:p2},{h:'Scala delle bande',t:p3},{h:'Sequenza recente',t:p4}]);
+}
+};
+GC.RTI={
+DEF:{N:100,sens:95,sig:20,ob:80,os:20},
+compute(closes,cfg){
+const C=Object.assign({},GC.RTI.DEF,cfg||{}), N=C.N; if(!Array.isArray(closes)||!(N>=2)||closes.length<N+1||closes.some(x=>!(typeof x==='number'&&isFinite(x)))) return null;
+const ui_=Math.round(C.sens/100*N)-1, li_=Math.round((100-C.sens)/100*N)-1; if(ui_<0||li_<0||ui_>=N||li_>=N) return null;
+const al=2/(C.sig+1), rt=[]; let sg=null;
+for(let i=N;i<closes.length;i++){
+const up=[],lo=[]; for(let j=i-N+1;j<=i;j++){ const sd=Math.abs(closes[j]-closes[j-1])/2; up.push(closes[j]+sd); lo.push(closes[j]-sd); }
+up.sort((a,b)=>a-b); lo.sort((a,b)=>a-b);
+const den=up[ui_]-lo[li_]; if(!(den>0)){ rt.length=0; sg=null; continue; }
+const r=(closes[i]-lo[li_])/den*100; rt.push(r); sg=sg==null?r:al*r+(1-al)*sg;
+}
+if(!rt.length) return null;
+const rti=rt[rt.length-1], prev=rt.length>1?rt[rt.length-2]:null;
+return {rti,prev,sig:sg,n:rt.length,N,side:rti>50?1:rti<50?-1:0,zone:rti>=C.ob?'sopra '+C.ob:rti<=C.os?'sotto '+C.os:'intermedia',above:sg!=null?rti>sg:null,cfg:C};
+}
+};
+GC.Risk={
+size(x){
+const cap=+x.capital, rp=+x.riskPct, en=+x.entry, st=+x.stop, L=x.kind==='lev'?+x.lev:1;
+if(!(cap>0&&rp>0&&rp<=100&&en>0&&st>0&&en!==st&&L>0&&isFinite(cap)&&isFinite(L))) return null;
+const dist=Math.abs(en-st), pct=dist/en, money=cap*rp/100, w=[];
+if(rp>2) w.push('rischio per operazione '+rp+'% del capitale: oltre il 2% (soglia prudenziale di convenzione, non una regola del sistema) una serie di stop pesa molto sul capitale');
+if(x.kind==='lev'){
+const pe=money/(L*pct); if(pe>cap) w.push('l\'esposizione richiesta nel prodotto supera il capitale');
+w.push('prodotto a leva '+L+'×: allo stop del sottostante la perdita attesa è ≈ '+(L*pct*100).toFixed(2)+'% del valore investito nel prodotto (stima lineare); gap, reset giornaliero, barriere/knock-out e margini possono aumentarla');
+return {kind:'lev',riskMoney:money,stopDist:dist,stopPct:pct*100,productExposure:pe,underlyingEq:pe*L,productLossPct:L*pct*100,qty:null,notional:null,warn:w};
+}
+const qty=Math.floor(money/dist), nt=qty*en; if(nt>cap) w.push('il nozionale ('+nt.toFixed(0)+') supera il capitale: servirebbe leva o margine, non assunta dal sistema');
+if(qty<1) w.push('il rischio ammesso non basta per 1 unità allo stop indicato');
+w.push('lo stop è un livello teorico sul sottostante: gap notturni o slippage possono produrre una perdita superiore al rischio calcolato');
+return {kind:'und',riskMoney:money,stopDist:dist,stopPct:pct*100,qty,notional:nt,realRisk:qty*dist,warn:w};
+}
+};
+GC.Market={
+easter(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return [mo,da]; },
+nth(y,m,wd,n){ const first=new Date(Date.UTC(y,m-1,1)).getUTCDay(); return 1+((wd-first+7)%7)+7*(n-1); },
+lastMon(y,m){ const last=new Date(Date.UTC(y,m,0)); return last.getUTCDate()-((last.getUTCDay()+6)%7); },
+holidays(y){
+const out={}, add=(m,d,n,newYear)=>{ const dt=new Date(Date.UTC(y,m-1,d)), wd=dt.getUTCDay(); let t=dt; if(wd===6){ if(newYear) return; t=new Date(dt.getTime()-86400000); } else if(wd===0) t=new Date(dt.getTime()+86400000); out[t.toISOString().slice(0,10)]=n; };
+add(1,1,'Capodanno',true); add(1,GC.Market.nth(y,1,1,3),'Martin Luther King'); add(2,GC.Market.nth(y,2,1,3),'Presidents Day'); const [em,ed]=GC.Market.easter(y), gf=new Date(Date.UTC(y,em-1,ed)-2*86400000); out[gf.toISOString().slice(0,10)]='Venerdì Santo';
+add(5,GC.Market.lastMon(y,5),'Memorial Day'); add(6,19,'Juneteenth'); add(7,4,'Independence Day'); add(9,GC.Market.nth(y,9,1,1),'Labor Day'); add(11,GC.Market.nth(y,11,4,4),'Thanksgiving'); add(12,25,'Natale'); return out; },
+isHoliday(tz,tSec){ const d=GC.Sessions.localDate(tz,tSec), h=GC.Market.holidays(+d.slice(0,4)); const nx=GC.Market.holidays(+d.slice(0,4)+1); return h[d]||nx[d]||null; },
+earlyClose(tz,tSec){ const d=GC.Sessions.localDate(tz,tSec), y=+d.slice(0,4), hol=GC.Market.holidays(y), dt=new Date(d+'T12:00:00Z'), wd=dt.getUTCDay(); if(wd===0||wd===6||hol[d]) return false;
+const day=(m,dd)=>y+'-'+String(m).padStart(2,'0')+'-'+String(dd).padStart(2,'0'); const th=GC.Market.nth(y,11,4,4); if(d===day(11,th+1)) return true; if(d===day(12,24)) return true; if(d===day(7,3)) return true; return false; },
+sessionsOn(tz,tSec,ext){ const d=GC.Sessions.localDate(tz,tSec), dt=new Date(d+'T12:00:00Z'), wd=dt.getUTCDay(); if(wd===0||wd===6||GC.Market.isHoliday(tz,tSec)) return []; const all=GC.Sessions.nyseExtended(tz,tSec).filter(s=>s[2]==='regular'||(s[2]==='pre'&&ext.pre)||(s[2]==='post'&&ext.post)); if(GC.Market.earlyClose(tz,tSec)) for(const s of all){ const [y,m,dd]=d.split('-').map(Number), c=GC.Sessions.zonedToUtc(y,m,dd,13,0,tz); if(s[2]==='regular'&&s[1]>c) s[1]=c; if(s[2]==='post'){ s[0]=c; s[1]=Math.min(s[1],GC.Sessions.zonedToUtc(y,m,dd,17,0,tz)); } } return all; },
+isOpen(tz,tSec,ext){ return GC.Market.sessionsOn(tz,tSec,ext).some(s=>tSec>=s[0]&&tSec<s[1]); },
+nextOpen(tz,tSec,ext){ for(let k=0;k<12;k++){ const t=tSec+k*86400, ss=GC.Market.sessionsOn(tz,t,ext).filter(s=>s[1]>tSec).sort((a,b)=>a[0]-b[0]); if(ss.length) return Math.max(ss[0][0],tSec); } return null; },
+pollDelay(o){ const tz=o.tz||'America/New_York', ext=o.ext||{pre:true,post:false}, n=o.nowSec, fails=o.fails|0;
+if(fails>0||o.rateLimited){ let d=Math.min(480,60*Math.pow(2,Math.max(0,Math.min(fails-1,3)))); if(o.rateLimited) d=Math.max(d,300); return {ms:d*1000,why:o.rateLimited?'limite di richieste: attesa lunga':'dopo errori: ritardo crescente'}; }
+if(GC.Market.isOpen(tz,n,ext)){ const ss=GC.Market.sessionsOn(tz,n,ext).find(s=>n>=s[0]&&n<s[1]); let d=o.live?5:120; if(ss){ const SS=o.stepSec||3600, k=Math.floor((n-ss[0])/SS), st=(o.settleSec||420)+5; for(const e of [ss[0]+k*SS,Math.min(ss[1],ss[0]+(k+1)*SS)]){ const until=e+st-n; if(until>5&&until<d) d=until; } } return {ms:Math.max(o.live?5:30,Math.round(d))*1000,why:o.live?'mercato aperto, movimento in diretto (ogni 5 s)':'mercato aperto'}; }
+const no=GC.Market.nextOpen(tz,n,ext); const d=no==null?1800:Math.min(1800,Math.max(120,no-n)); return {ms:d*1000,why:no==null?'mercato chiuso':'mercato chiuso: controllo di tanto in tanto fino alla prossima apertura'}; }
+};
+GC.defaultModel={
+common:{D0:.5,Dmin:.15,Dmax:1,Dsmax:.8,FMAX:2,epsFrac:.25,maxGapH:120,staleH:100},
+'1H':{stepH:1,kF:.01,tauV:3,T:120},
+'1m':{stepH:1/60,kF:36,tauV:.05,T:2},
+'5m':{stepH:1/12,kF:1.44,tauV:.25,T:10},
+'4H':{stepH:4,kF:.0006,tauV:12,T:480}
+};
+GC.Engine=function(tf,model,indParams,saved){
+const M=Object.assign({},model.common,model[tf]), epsV=M.epsFrac*M.kF*M.tauV, sh=M.stepH*3600, HIST=800, HISTB=GC.Store.MAXBARS;
+const fresh=()=>({v:2,app:GC.VERSION,tf,lastT:null,lastSig:null,ind:{win:[],n:0,ema:null,seed:0},nDyn:0,D:M.D0,vel:0,acc:0,Ds:M.D0,h:0,obs:[],bars:[],trunc:0,gal:{act:0,since:null,n:0,closed:0,lastClose:null},
+q:{missing:0,discont:0,revised:0,nObs:0,warm:0,scaleNull:0},disc:[]});
+let S=(saved&&GC.Store.adopt(saved,tf))||fresh();
+const Dsf=h=>M.D0+(M.Dsmax-M.D0)*(1-Math.exp(-h/M.T)), dsdt=h=>(M.Dsmax-M.D0)/M.T*Math.exp(-h/M.T);
+const sig=b=>b.valid?[b.o,b.mx,b.mn,b.l].join('|'):'x';
+function dirOf(v){ return v>epsV?1:v<-epsV?-1:0; }
+function push(bar){
+if(S.lastT!=null&&bar.t<=S.lastT){ if(bar.t===S.lastT&&S.lastSig!=null&&sig(bar)!==S.lastSig) S.q.revised++; return {skipped:true,events:[]}; }
+if(S.lastT!=null&&(bar.t-S.lastT)/3600>M.maxGapH){ const q=S.q, d=S.disc.concat([{from:S.lastT,to:bar.t}]), bs=S.bars, tr=S.trunc, gl=S.gal; S=fresh(); S.q=q; S.q.discont++; S.disc=d; S.bars=bs; S.trunc=tr; S.gal=Object.assign({},gl,{act:0,since:null}); }
+S.lastT=bar.t; S.lastSig=sig(bar);
+{ const cv=bar.cov==null||!fin(bar.cov)?null:Math.round(bar.cov*1000)/1000, g=bar.g==null?null:bar.g; S.bars.push(bar.valid?[bar.t,bar.o,bar.mx,bar.mn,bar.l,cv,g]:[bar.t,null,null,null,null,cv,g]); } if(S.bars.length>HISTB){ S.bars.shift(); S.trunc++; }
+const sgv=GC.hash(sig(bar)).slice(0,8), rec=o=>{ o.sg=sgv; S.obs.push(o); if(S.obs.length>HIST) S.obs.shift(); return o; };
+if(!bar.valid){ S.q.missing++; return rec({t:bar.t,status:'mancante'}); }
+const ic=GC.IndCalc(indParams,S.ind), ind=ic.push(bar);
+if(!ind.ready){ S.q.warm=ind.n; return rec({t:bar.t,status:'warmup',n:ind.n}); }
+const A=Math.max(Math.abs(ind.upper),Math.abs(ind.lower));
+if(!fin(A)||A===0){ S.q.scaleNull++; return rec({t:bar.t,status:'scala nulla',state:ind.state}); }
+const E=Math.min(Math.max(bar.l,0)/A,M.FMAX), G=Math.min(Math.max(-bar.l,0)/A,M.FMAX), R=E-G, dt=M.stepH;
+let v=S.vel+(M.kF*R-S.vel/M.tauV)*dt, D=S.D+v*dt;
+let lim=0; if(D>=M.Dmax){ D=M.Dmax; if(v>0){ v=0; lim=1; } } else if(D<=M.Dmin){ D=M.Dmin; if(v<0){ v=0; lim=-1; } }
+const a=(v-S.vel)/dt; S.vel=v; S.D=D; S.acc=a; S.nDyn++; S.h=S.nDyn*dt; S.Ds=Dsf(S.h);
+S.q.nObs++;
+const o={t:bar.t,status:'ok',l:bar.l,state:ind.state,ema:ind.ema,std:ind.std,upper:ind.upper,lower:ind.lower,A,E,G,R,D,v,a,Ds:S.Ds,dsdt:dsdt(S.h),dev:D-S.Ds,h:S.h,lim,wall:D>=M.Dmax?1:D<=M.Dmin?-1:0,movDir:dirOf(v),pressDir:R>=M.epsFrac?1:R<=-M.epsFrac?-1:0,decel:Math.abs(v)>epsV&&v*a<0,faster:v>dsdt(S.h)};
+rec(o); const gl=S.gal, on=GC.Galaxy.cond(o);
+if(on&&!gl.act){ gl.act=1; gl.since=bar.t; gl.n++; } else if(!on&&gl.act){ gl.act=0; gl.closed++; gl.lastClose=bar.t; }
+return o;
+}
+const isClosed=(b,nowSec)=>b.closed!==undefined?b.closed:(b.t+sh<=nowSec);
+function split(bars,nowSec){ const closed=[]; let forming=null; for(const b of bars){ if(isClosed(b,nowSec)) closed.push(b); else forming=b; } return {closed,forming}; }
+function pushSeries(bars,nowSec){
+const sp=split(bars,nowSec); for(const b of sp.closed) push(b); return sp.forming;
+}
+function peek(bar){ const c=GC.Engine(tf,model,indParams,JSON.parse(JSON.stringify(S))); const o=c.push(bar); return o; }
+function compare(bars){
+const L=S.lastT, m=new Map(S.obs.map(o=>[o.t,o.sg])); let overlap=0,differ=0,fresh=0,beyond=0;
+for(const b of bars){ if(L==null||b.t>L){ fresh++; continue; } const g=m.get(b.t); if(g===undefined){ beyond++; continue; } overlap++; if(g!==GC.hash(sig(b)).slice(0,8)) differ++; }
+const first=bars.length?bars[0].t:null, lastB=bars.length?bars[bars.length-1].t:null;
+let kind='prima'; if(L!=null){ kind=differ>0?'correzione':(lastB<L?'piu_vecchi':(fresh>0?(overlap>0||beyond>0?'incrementale':'senza_sovrapposizione'):'nessuna_novita')); }
+return {kind,overlap,differ,fresh,beyond,first,last:lastB};
+}
+const toBar=r=>r[4]==null?{t:r[0],o:null,mx:null,mn:null,l:null,valid:false,cov:r[5],g:r[6]==null?null:r[6]}:{t:r[0],o:r[1],mx:r[2],mn:r[3],l:r[4],valid:true,cov:r[5],g:r[6]==null?null:r[6]};
+function history(){ return S.bars.map(toBar); }
+function counts(){
+const L=indParams.bbLength, valid=S.bars.filter(r=>r[4]!=null), used=S.ind.n, w=used>0?valid.slice(-Math.min(used,L)):[];
+return {processed:S.bars.length,valid:valid.length,missing:S.bars.length-valid.length,used,need:L,windowLowCov:w.filter(r=>r[5]!=null&&r[5]<1).length,
+firstT:S.bars.length?S.bars[0][0]:null,lastT:S.lastT,windowT:w.map(r=>r[0]),windowCoarse:w.filter(r=>r[6]!=null&&r[6]>=3600).length,windowFine:w.filter(r=>r[6]!=null&&r[6]<3600).length,legacy:S.bars.length===0&&S.q.nObs+S.q.warm>0,trunc:S.trunc};
+}
+function origin(downloadedT){
+const c=counts(), set=downloadedT instanceof Set?downloadedT:new Set(downloadedT||[]); if(c.legacy) return {kind:'locale_v1',now:0,local:c.used,n:c.used};
+const now=c.windowT.filter(t=>set.has(t)).length; return {kind:c.windowT.length===0?'nessuna':now===c.windowT.length?'scaricate':now===0?'locale':'misto',now,local:c.windowT.length-now,n:c.windowT.length};
+}
+function dropCoarser(bars){ if(!S.bars.length) return bars; const m=new Map(S.bars.map(r=>[r[0],r[6]==null?0:r[6]])); return bars.filter(b=>{ const g=m.get(b.t); return !(g!==undefined&&g>0&&b.g!=null&&b.g>g); }); }
+function last(){ for(let i=S.obs.length-1;i>=0;i--) if(S.obs[i].status==='ok') return S.obs[i]; return null; }
+function quality(nowSec){
+const lo=S.obs[S.obs.length-1], L=indParams.bbLength, ageH=S.lastT!=null?(nowSec-S.lastT)/3600:null;
+const ready=!!last(), stale=ageH==null||ageH>M.staleH, lastStatus=lo?lo.status:null;
+let state='ok', why=[];
+if(!ready){ state='warmup'; why.push('riscaldamento indicatore: '+S.q.warm+'/'+L+' barre valide (bande non ancora definite)'); }
+if(stale&&ready){ state='non aggiornata'; why.push('ultima barra chiusa di '+ageH.toFixed(1)+' h fa (oltre '+M.staleH+' h)'); }
+if(ready&&lastStatus&&lastStatus!=='ok'){ state='non aggiornata'; why.push('ultima barra: '+lastStatus+' (dinamica ferma all\'ultima osservazione valida)'); }
+return {state,why,ageH,ready,stale,q:S.q,disc:S.disc};
+}
+return {push,pushSeries,split,peek,compare,last,quality,history,counts,origin,dropCoarser,get state(){ return S; },cfg:M,epsV,dirOf,dsdt,Dsf,serialize(){ return JSON.stringify(S); }};
+};
+GC.Sync={
+classify(o1,o4){
+if(!o1||!o4) return {code:'incomplete',label:'Dati insufficienti',text:'Almeno una timeframe non ha ancora una dinamica valida: nessuna lettura di sintesi.',mods:[]};
+const b1=o1.lim||0, b4=o4.lim||0, d1=b1?0:o1.movDir, d4=b4?0:o4.movDir;
+const side=l=>l>0?'massimo':'minimo', pr=o=>o.lim>0?'rialzista':'ribassista';
+let code,label,text;
+if(b1&&b4){ code='blocked'; label='1H e 4H ferme su un limite fisico'; text=`La 1H è ferma sul limite ${side(b1)} (pressione ${pr(o1)}) e la 4H sul limite ${side(b4)} (pressione ${pr(o4)}): il moto è vincolato, non si sta muovendo.`; }
+else if((b1||b4)&&d1===0&&d4===0){ const t=b1?'1H':'4H', o=b1?o1:o4, l=b1?b1:b4; code='blocked'; label=`${t} ferma su un limite fisico`; text=`La ${t} è ferma sul limite ${side(l)} (pressione ${pr(o)}); l'altra timeframe è sotto la soglia di neutralità.`; }
+else if(d1>0&&d4>0){ code='both_up'; label='1H e 4H rialziste'; text='Concordanza tra breve e medio periodo: in entrambe le scale le galassie si allontanano.'; }
+else if(d1<0&&d4<0){ code='both_down'; label='1H e 4H ribassiste'; text='Concordanza negativa: in entrambe le scale le galassie si avvicinano.'; }
+else if(d4>0&&d1<0){ code='up4_down1'; label='4H rialzista, 1H ribassista'; text='Possibile correzione di breve periodo all\'interno di una struttura rialzista.'; }
+else if(d4<0&&d1>0){ code='down4_up1'; label='4H ribassista, 1H rialzista'; text='Possibile rimbalzo di breve periodo all\'interno di una struttura ribassista.'; }
+else if(d1===0&&d4===0){ code='both_flat'; label='Entrambe neutrali'; text='Né la 1H né la 4H hanno un movimento rilevante: la velocità è sotto la soglia di neutralità.'; }
+else { const mv=d1!==0?'1H':'4H', ot=d1!==0?'4H':'1H', blk=(d1!==0?b4:b1); code='one_moving'; label=blk?'Una timeframe in movimento, l\'altra bloccata su un limite':'Una timeframe in movimento, l\'altra ferma'; text=`La ${mv} è in movimento (${(d1!==0?d1:d4)>0?'allontanamento':'avvicinamento'}), la ${ot} ${blk?'è ferma sul limite '+side(blk)+' (pressione '+pr(d1!==0?o4:o1)+')':'è sotto la soglia di neutralità'}.`; }
+const mods=[], dec1=o1.decel&&!b1, dec4=o4.decel&&!b4;
+if(dec1&&!dec4&&d4!==0) mods.push('la 1H sta rallentando mentre la 4H prosegue'); if(dec4&&!dec1&&d1!==0) mods.push('la 4H sta rallentando mentre la 1H prosegue'); if(dec1&&dec4) mods.push('entrambe stanno rallentando');
+for(const [t,o] of [['1H',o1],['4H',o4]]) if(!o.lim&&o.movDir!==0&&o.pressDir!==0&&o.movDir!==o.pressDir) mods.push(`${t}: pressione opposta al movimento (il moto prosegue per inerzia)`);
+return {code,label,text,mods};
+}
+};
+GC.Avg={ compute(obs,nowSec,winSec,minN){ const W=winSec||3600, fn=Number.isFinite; if(!fn(nowSec)) return null; const ok=(obs||[]).filter(o=>o&&o.status==='ok'&&fn(o.t)&&o.t<=nowSec&&fn(o.v)); let w=ok.filter(o=>o.t>=nowSec-W), ext=false; if(minN&&w.length<minN&&ok.length>=1){ w=ok.slice(-minN); ext=true; } if(!w.length) return null;
+const m=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN, va=w.map(o=>o.v), aa=w.map(o=>o.a).filter(fn);
+return {v:m(va),a:m(aa),vAbs:m(va.map(Math.abs)),aAbs:m(aa.map(Math.abs)),n:w.length,ext,nA:aa.length,t0:w[0].t,t1:w[w.length-1].t,partial:w[0].t>nowSec-W+ (w.length>1?(w[w.length-1].t-w[0].t)/(w.length-1):0)*1.5}; } };
+GC.RenderMath={
+readFlow(st,pressDir){ if(!st) return null; const dir=st.dir, pedal=dir===0?'ferma':st.accel?'rafforzamento':st.brake?'esaurimento':'costante', pd=pressDir>0?1:pressDir<0?-1:0, wind=dir===0||pd===0?'neutra':pd===dir?'concorde':'discorde', score=(pedal==='esaurimento'?2:0)+(wind==='discorde'?2:0), level=score>=4?'rosso':score>=2?'giallo':'verde';
+return {dir,pedal,wind,score,level}; },
+flowPhrase(fl){ if(!fl) return ''; if(fl.dir===0) return 'Auto in folle. Nessun movimento chiaro. Peso '+fl.score+'.'; const mv=fl.dir>0?'Auto in marcia avanti.':'Auto in retromarcia.', sp=fl.pedal==='rafforzamento'?' Sta guadagnando spinta.':fl.pedal==='esaurimento'?' Sta perdendo spinta.':' Andatura costante.', wd=fl.wind==='concorde'?' Vento a favore.':fl.wind==='discorde'?' Vento contrario.':' Vento neutro.'; return mv+sp+wd+' Peso '+fl.score+'.'; },
+accTrend(obs,ref,n,cur){ n=n||3; const q=(obs||[]).filter(o=>o&&o.status==='ok'&&fin(o.a)).slice(-(n-(cur&&fin(cur.a)?1:0))); if(cur&&fin(cur.a)) q.push(cur); if(q.length<3||!ref||!fin(ref.a)||ref.a<=0) return null;
+const ch=(q[q.length-1].a-q[0].a)/ref.a, chV=fin(ref.v)&&ref.v>0&&fin(q[0].v)&&fin(q[q.length-1].v)?(Math.abs(q[q.length-1].v)-Math.abs(q[0].v))/ref.v:0, thr=.06,
+cA=ch<-thr, cV=chV<-thr, sA=ch>thr, sV=chV>thr, strength=Math.max(0,-ch,-chV);
+const chVs=fin(ref.v)&&ref.v>0&&fin(q[0].v)&&fin(q[q.length-1].v)?(q[q.length-1].v-q[0].v)/ref.v:0; return {ch,chV,chVs,state:(cA||cV)?'cala':(sA||sV)?'sale':'stabile',by:cA&&cV?'a e v':cA?'a':cV?'v':'',strength,n:q.length}; },
+carRefs(obs){ const q=k=>{ const a=(obs||[]).slice(-400).map(o=>Math.abs(o[k])).filter(fin).sort((x,y)=>x-y); return a.length?Math.max(1e-9,a[Math.min(a.length-1,Math.floor(.9*a.length))]):1e-9; }; return {v:q('v'),a:q('a')}; },
+priceDir(bars,n){ n=n||4; const q=(bars||[]).filter(b=>b&&Array.isArray(b.px)&&b.px.length===4&&b.px.every(x=>typeof x==='number'&&isFinite(x))).sort((x,y)=>x.t-y.t).slice(-n); if(q.length<2) return null; const c0=q[0].px[3], c1=q[q.length-1].px[3], net=c1-c0; return {dir:net>0?1:net<0?-1:0,net,rel:c0?net/Math.abs(c0):NaN,n:q.length,t:q[q.length-1].t}; },
+cashFlow(at,pdir){ if(!at||!fin(at.ch)||!fin(at.chVs)||!fin(pdir)||!pdir) return 0; const T=.06, up=at.ch>T&&at.chVs>T&&pdir>0, dn=at.ch<-T&&at.chVs<-T&&pdir<0; if(!up&&!dn) return 0; return Math.min(1,.3+.7*Math.min(1,Math.min(Math.abs(at.ch),Math.abs(at.chVs))/.3)); },
+carState(o,ref){ if(!o||!ref||!fin(o.v)) return null; const spd=Math.min(1,Math.abs(o.v)/ref.v), lim=!!o.lim, dir=lim||spd<.03?0:Math.sign(o.v), acc=fin(o.a)?Math.max(-1,Math.min(1,o.a/ref.a)):0, along=dir*Math.sign(acc);
+return {spd,dir,acc,lim,brake:dir!==0&&along<0&&Math.abs(acc)>.12,accel:dir!==0&&along>0&&Math.abs(acc)>.12,reverse:dir<0}; },
+breathPeriod(k){ return 8-4.5*Math.min(1,Math.max(0,fin(k)?k:0)); },
+breath(ph){ const b=.5-.5*Math.cos(ph); return b*b*(3-2*b); },
+breathFactor(k,b){ const kk=Math.min(1,Math.max(0,fin(k)?k:0)); return 1+(.15+.2*kk)*(2*b-1); },
+tint(pressDir,path){ const k=fin(path)?Math.min(1,Math.max(0,path)/0.4):0.15; return (pressDir<0?-1:1)*(.12+.88*k); },
+smooth(shown,target,dtMs,tauMs){ if(!fin(shown)) return target; return target+(shown-target)*Math.exp(-dtMs/tauMs); },
+sepPx(D,Dmin,Dmax,minPx,maxPx){ const u=Math.min(1,Math.max(0,(D-Dmin)/(Dmax-Dmin))); return minPx+u*(maxPx-minPx); }
+};
+GC.VERSION='5.3.1';
+GC.Store={
+MAXBARS:8000,
+cfgHash(codeHash,indParams,modelTf,extra){ return GC.hash(JSON.stringify([codeHash,indParams,modelTf,extra||null])); },
+key(sym,tf,h){ return 'gc2|'+sym+'|'+tf+'|'+h; },
+save(st,key,state){ return GC.Store.saveSafe(st,key,state).ok; },
+saveSafe(st,key,state){ try{ const txt=JSON.stringify(state); st.setItem(key,txt); return {ok:true,bytes:txt.length}; }catch(e){ return {ok:false,err:(e&&(e.name==='QuotaExceededError'||/quota/i.test(e.message||'')))?'quota':'negato',msg:String(e&&e.message||e)}; } },
+load(st,key){ const r=GC.Store.inspect((()=>{ try{ return st.getItem(key); }catch(e){ return null; } })(),null); return r.state; },
+validate(S,tf){
+const er=[], isN=x=>typeof x==='number'&&fin(x);
+if(!S||typeof S!=='object'||Array.isArray(S)) return ['stato non è un oggetto'];
+if(tf&&S.tf!==tf) er.push('timeframe «'+S.tf+'» invece di «'+tf+'»');
+if(!(S.lastT===null||isN(S.lastT))) er.push('lastT non valido');
+if(!S.ind||!Array.isArray(S.ind.win)||!S.ind.win.every(isN)||!isN(S.ind.n)||S.ind.n<S.ind.win.length||!(S.ind.ema===null||isN(S.ind.ema))||!isN(S.ind.seed)) er.push('finestra dell\'indicatore non valida');
+for(const k of ['D','vel','acc','Ds','h','nDyn']) if(!isN(S[k])) er.push('campo «'+k+'» non numerico');
+if(!S.q||!['missing','discont','revised','nObs','warm','scaleNull'].every(k=>isN(S.q[k]))) er.push('contatori di qualità non validi');
+if(!Array.isArray(S.obs)) er.push('osservazioni mancanti'); else { let p=-Infinity; for(const o of S.obs){ if(!o||!isN(o.t)||o.t<=p){ er.push('osservazioni non ordinate o non valide'); break; } p=o.t; } if(S.obs.length&&S.lastT!==S.obs[S.obs.length-1].t) er.push('lastT non coincide con l\'ultima osservazione'); }
+if(S.v>=2){ if(!Array.isArray(S.bars)) er.push('storico delle barre mancante'); else { let p=-Infinity; for(const r of S.bars){ if(!Array.isArray(r)||r.length<5||!isN(r[0])||r[0]<=p||(r[4]!=null&&!(isN(r[1])&&isN(r[2])&&isN(r[3])&&isN(r[4])))){ er.push('storico delle barre non ordinato o con valori non validi'); break; } p=r[0]; }
+if(S.bars.length&&S.lastT!==S.bars[S.bars.length-1][0]) er.push('lastT non coincide con l\'ultima barra dello storico'); } }
+if(S.gal!==undefined&&!(S.gal&&typeof S.gal==='object'&&(S.gal.act===0||S.gal.act===1)&&isN(S.gal.n)&&isN(S.gal.closed))) er.push('stato della galassia non valido');
+return er;
+},
+migrate(S){ if(S.v===1){ const o=Object.assign({},S,{v:2,app:S.app||'1.3',bars:[],trunc:0,mig:{from:1}}); return o; } return S; },
+adopt(S,tf){ if(!S||typeof S!=='object'||(S.v!==1&&S.v!==2)||S.tf!==tf) return null; if(GC.Store.validate(S,tf).length) return null; const o=GC.Store.migrate(S);
+if(!o.gal){
+const ok=o.obs.filter(x=>x.status==='ok'); let act=ok.length&&GC.Galaxy.cond(ok[ok.length-1])?1:0, since=null; if(act){ for(let i=ok.length-1;i>=0&&GC.Galaxy.cond(ok[i]);i--) since=ok[i].t; } o.gal={act,since,n:act?1:0,closed:0,lastClose:null,derived:1}; }
+return o; },
+inspect(text,tf){
+if(text==null||text==='') return {status:'absent',state:null,errors:[]};
+let S; try{ S=JSON.parse(text); }catch(e){ return {status:'corrupt',state:null,errors:['JSON non leggibile']}; }
+if(!S||typeof S!=='object'||Array.isArray(S)||typeof S.v!=='number') return {status:'corrupt',state:null,errors:['formato non riconosciuto']};
+if(S.v>2||S.v<1) return {status:'incompatible',state:null,errors:['versione dello stato '+S.v+' (questa app legge 1–2): salvato da una versione diversa']};
+if(tf&&S.tf!==tf) return {status:'incompatible',state:null,errors:['timeframe diverso']};
+const er=GC.Store.validate(S,tf); if(er.length) return {status:'corrupt',state:null,errors:er};
+return S.v===1?{status:'migrated',state:GC.Store.migrate(S),errors:[],from:1}:{status:'ok',state:S,errors:[]};
+},
+otherKeys(st,sym,tf,h){ const out=[]; try{ for(let i=0;i<st.length;i++){ const k=st.key(i); if(k&&k.indexOf('gc2|'+sym+'|'+tf+'|')===0&&k!==GC.Store.key(sym,tf,h)) out.push(k); } }catch(e){} return out; },
+quarantine(st,key,text,stamp){ const qk='gc2q|'+stamp+'|'+key; try{ st.setItem(qk,text); return qk; }catch(e){ return null; } },
+mergeBars(stored,incoming){
+const m=new Map(), sg=b=>b.valid?[b.o,b.mx,b.mn,b.l].join('|'):'x'; let added=0, corrected=0, same=0;
+for(const b of stored) m.set(b.t,b);
+for(const b of incoming){ const o=m.get(b.t); if(!o) added++; else if(sg(o)!==sg(b)) corrected++; else same++; m.set(b.t,b); }
+return {bars:[...m.keys()].sort((a,b)=>a-b).map(t=>m.get(t)),added,corrected,same};
+},
+metaDiff:null
+};
+GC.Engine.replay=function(tf,model,indParams,bars){ const e=GC.Engine(tf,model,indParams,null); for(const b of bars.slice().sort((x,y)=>x.t-y.t)) e.push(b); return e; };
+GC.Diag={
+assess(o){
+const L=o.L, used=o.used|0, r=[]; let level;
+if(used<=0){ level='insufficient'; r.push(o.hasData?'nessuna barra 1H valida e chiusa è stata elaborata dal motore':'nessun dato 1H caricato'); }
+else if(used<L){ level='warmup'; r.push(`${used}/${L} barre 1H valide e chiuse elaborate: le bande esistono solo dalla ${L}ª`); }
+else if(!o.lastOk){ level='incomplete'; r.push('requisito delle '+L+' barre soddisfatto ma l\'ultima osservazione non è calcolabile (scala delle bande nulla o barra mancante)'); }
+else level='ready';
+if(used>=L){
+if(o.windowLowCov>0){ level='incomplete'; r.push(o.windowLowCov+' barre della finestra di '+L+' ricostruite con copertura <100% delle barre inferiori'); }
+if(o.pendingCorrections>0){ level='incomplete'; r.push(o.pendingCorrections+' barre già elaborate risultano corrette nei dati ricevuti (non applicate)'); }
+if(o.stale){ level='incomplete'; r.push('ultima barra elaborata troppo vecchia ('+o.ageH.toFixed(1)+' h)'); }
+if(o.legacy){ r.push('stato migrato dalla 1.3: le singole barre non sono conservate (storico non ricostruibile)'); }
+}
+return {level,need:L,have:used,missing:Math.max(0,L-used),reasons:r};
+}
+};
+GC.Equiv={
+compare(rows,params,opt){
+opt=Object.assign({tolRel:1e-4,seeds:['sma','first']},opt||{});
+const n=GC.Series.normalize(rows,3600,{maxGapSec:1e12}), out={bars:n.bars.length,seeds:{},report:n.report,L:params.bbLength};
+const hasRef=n.bars.some(b=>b.ema!=null||b.up!=null||b.lo!=null);
+if(!hasRef){ out.error='il file non contiene colonne di riferimento (ema / upper / lower)'; return out; }
+for(const seed of opt.seeds){
+const ic=GC.IndCalc(Object.assign({},params,{seed})), r={n:0,nBands:0,maxRel:0,maxAbs:0,maxRelLate:0,nLate:0,stN:0,stOk:0,first:null,seg:[]}; let k=0;
+for(const b of n.bars){ if(!b.valid) continue; const x=ic.push(b); k++; if(!x.ready) continue;
+for(const [mine,ref] of [[x.ema,b.ema],[x.upper,b.up],[x.lower,b.lo]]){ if(ref==null||!fin(ref)) continue; const ab=Math.abs(mine-ref), rl=ab/Math.max(Math.abs(ref),1); r.n++; if(rl>r.maxRel) r.maxRel=rl; if(ab>r.maxAbs) r.maxAbs=ab; if(k>2*params.bbLength){ r.nLate++; if(rl>r.maxRelLate) r.maxRelLate=rl; } }
+if(b.up!=null&&b.lo!=null){ const l=b.l, ref=l>0?(l>=b.up?'bull_strong':'bull_weak'):(l<=b.lo?'bear_strong':'bear_weak'); r.stN++; if(ref===x.state) r.stOk++; }
+if(k%params.bbLength===0||k===n.bars.length) r.seg.push([k,r.maxRel]);
+}
+r.pass=r.n>=params.bbLength&&r.maxRel<=opt.tolRel; out.seeds[seed]=r;
+}
+return out;
+}
+};
+GC.Store.metaDiff=function(prev,cur){ if(!prev) return null; const d=[]; if(prev.codeHash!==cur.codeHash) d.push('codice dell\'indicatore'); if(JSON.stringify(prev.params)!==JSON.stringify(cur.params)) d.push('parametri dell\'indicatore'); if(prev.src!==cur.src) d.push('sorgente/metodo dei dati'); if(prev.model!==cur.model) d.push('parametri del modello'); return d; };
+GC.BandEntry=function(cfg){
+const C=Object.assign({A:true,B:true,sqW:48,sqR:.9,sqOff:.97,sqDist:.25,sqWin:12,wideR:1.3,wideDist:.5,stopM:2,trailM:3,maxBars:48,atrLen:14,cool:3},cfg||{});
+const S={wd:[],sq:{on:false,endT:null,endN:0,used:false},ratio:null,trs:[],atr:null,pc:null,pos:null,cool:0,lastT:null,events:[],n:0,diag:{bars:0,squeezes:0,winBreaks:0,winBlocked:0,wideBreaks:0,wideBlocked:0,entriesA:0,entriesB:0}};
+const pxOk=p=>Array.isArray(p)&&p.length===4&&p.every(x=>typeof x==='number'&&isFinite(x))&&p[1]>=p[2]-1e-12&&p[0]>0;
+function push(o,px){
+const out={events:[]}; if(!o||typeof o.t!=='number'||!isFinite(o.t)) return out; if(S.lastT!=null&&o.t<=S.lastT) return out; S.lastT=o.t; S.n++; S.diag.bars++;
+const P=pxOk(px)?px:null, ok=o.status==='ok'&&isFinite(o.upper)&&isFinite(o.lower)&&isFinite(o.std)&&isFinite(o.l)&&o.upper>o.lower;
+if(P){ const tr=S.pc!=null?Math.max(P[1]-P[2],Math.abs(P[1]-S.pc),Math.abs(P[2]-S.pc)):P[1]-P[2]; S.trs.push(tr); if(S.trs.length>C.atrLen) S.trs.shift(); S.atr=S.trs.length===C.atrLen?S.trs.reduce((a,b)=>a+b,0)/C.atrLen:null; }
+const ev=(type,dir,price,x)=>{ const e=Object.assign({id:type+'|'+dir+'|'+o.t,type,t:o.t,dir,price},x||{}); S.events.push(e); out.events.push(e); return e; };
+let up=false,dn=false,wide=false;
+if(ok){ const w=o.upper-o.lower; if(S.wd.length>=C.sqW){ const m=S.wd.reduce((a,b)=>a+b,0)/S.wd.length; S.ratio=w/m; const q=S.sq;
+if(!q.on&&S.ratio<=C.sqR){ q.on=true; q.endT=null; q.endN=0; q.used=false; S.diag.squeezes++; }
+else if(q.on&&S.ratio>=C.sqOff){ q.on=false; q.endT=o.t; q.endN=0; q.used=false; }
+wide=S.ratio>=C.wideR; } else S.ratio=null;
+S.wd.push(w); if(S.wd.length>C.sqW) S.wd.shift();
+up=o.l>=o.upper+C.sqDist*o.std; dn=o.l<=o.lower-C.sqDist*o.std; }
+if(S.pos&&P){ const p=S.pos; p.bars++; let stop=p.stop, hit=p.dir>0?P[2]<=stop:P[1]>=stop;
+if(hit){ const px0=p.dir>0?Math.min(stop,P[0]):Math.max(stop,P[0]); ev('EXIT',p.dir,px0,{reason:'stop raggiunto',entry:p.entry,entryT:p.entryT,bars:p.bars}); S.pos=null; S.cool=C.cool; }
+else { p.best=p.dir>0?Math.max(p.best,P[3]):Math.min(p.best,P[3]); if(S.atr!=null){ const tr=p.best-p.dir*C.trailM*S.atr; p.stop=p.dir>0?Math.max(p.stop,tr):Math.min(p.stop,tr); }
+const opp=ok&&(p.dir>0?dn:up);
+if(opp) { ev('EXIT',p.dir,P[3],{reason:'chiusura decisa oltre la banda in verso opposto',entry:p.entry,entryT:p.entryT,bars:p.bars}); S.pos=null; S.cool=C.cool; }
+else if(p.bars>=C.maxBars){ ev('EXIT',p.dir,P[3],{reason:'uscita a tempo ('+C.maxBars+' barre)',entry:p.entry,entryT:p.entryT,bars:p.bars}); S.pos=null; S.cool=C.cool; } } }
+else if(S.cool>0) S.cool--;
+if(S.pos&&S.cool>0) S.cool=0;
+if(!S.pos&&ok&&P&&S.atr!=null&&S.cool===0&&(up||dn)){
+const dir=up?1:-1, conf=o.lim!==-dir&&o.pressDir!==-dir; let kind=null;
+const q=S.sq; if(!q.on&&q.endT!=null&&q.endN<=C.sqWin&&!q.used&&C.A){ S.diag.winBreaks++; if(conf) kind='SCATTO'; else S.diag.winBlocked++; q.used=true; }
+if(!kind&&wide&&C.B&&(dir>0?o.l>=o.upper+C.wideDist*o.std:o.l<=o.lower-C.wideDist*o.std)){ S.diag.wideBreaks++; if(conf&&(dir>0?P[3]>=P[0]:P[3]<=P[0])) kind='LARGHE'; else S.diag.wideBlocked++; }
+if(kind){ const stop=P[3]-dir*C.stopM*S.atr; S.pos={dir,entry:P[3],entryT:o.t,stop,stop0:stop,best:P[3],bars:0,kind}; if(kind==='SCATTO') S.diag.entriesA++; else S.diag.entriesB++; ev('ENTRY',dir,P[3],{grade:kind,kind,stop0:stop,atr:S.atr}); } }
+if(ok&&!S.sq.on&&S.sq.endT!=null){ S.sq.endN++; if(S.sq.endN>C.sqWin) S.sq.endT=null; }
+return out;
+}
+return {push,cfg:C,get state(){ return S; },get diag(){ return S.diag; }};
+};
+GC.VixProxy={
+BETA:5, BASE:20,
+fromBars(bars,opt){
+opt=Object.assign({beta:GC.VixProxy.BETA,base:GC.VixProxy.BASE},opt||{}); const fin=Number.isFinite, ok=x=>typeof x==='number'&&fin(x)&&x>0;
+let L0=null; for(const b of bars||[]) if(b&&ok(b.c)){ L0=Math.log(b.c); break; }
+return (bars||[]).map(b=>{ if(!b||L0==null||!ok(b.o)||!ok(b.c)) return Object.assign({},b||{},{o:null,c:null,v:0,hi:null,lo:null});
+const hiS=ok(b.hi)?Math.max(b.hi,b.o,b.c):Math.max(b.o,b.c), loS=ok(b.lo)?Math.min(b.lo,b.o,b.c):Math.min(b.o,b.c), V=x=>opt.base*Math.exp(-opt.beta*(Math.log(x)-L0));
+return {t:b.t,o:V(b.o),c:V(b.c),hi:V(loS),lo:V(hiS),v:0}; });
+},
+hybrid(vixBars,spyBars,opt){
+opt=Object.assign({beta:GC.VixProxy.BETA},opt||{}); const ok=x=>typeof x==='number'&&Number.isFinite(x)&&x>0, V=(vixBars||[]).slice(), S=(spyBars||[]).filter(b=>b&&ok(b.o)&&ok(b.c)).sort((a,b)=>a.t-b.t);
+let last=null; for(const b of V) if(b&&ok(b.o)&&ok(b.c)&&(last==null||b.t>last.t)) last=b;
+const out=V; out.lastRealT=last?last.t:null; out.nTail=0; out.anchor=false; if(!last||!S.length) return out;
+let anc=null; for(const b of S){ if(b.t<=last.t) anc=b; else break; } if(!anc) return out; out.anchor=true;
+const L0=Math.log(anc.c), f=x=>last.c*Math.exp(-opt.beta*(Math.log(x)-L0));
+for(const b of S){ if(b.t<=last.t) continue; const hiS=ok(b.hi)?Math.max(b.hi,b.o,b.c):Math.max(b.o,b.c), loS=ok(b.lo)?Math.min(b.lo,b.o,b.c):Math.min(b.o,b.c); out.push({t:b.t,o:f(b.o),c:f(b.c),hi:f(loS),lo:f(hiS),v:0}); out.nTail++; }
+return out; },
+hybridSource(sym){ const m=/^VIX\+(.+)$/i.exec(String(sym||'').trim()); return m&&m[1].trim()?m[1].trim().toUpperCase():null; },
+source(sym){ const m=/^VIX~(.+)$/i.exec(String(sym||'').trim()); return m&&m[1].trim()?m[1].trim().toUpperCase():null; }
+};
+GC.VixEtf={
+LIST:[
+{s:'VIXY',n:'ProShares VIX Short-Term Futures ETF',lev:1,txt:'future VIX a breve termine, 1×'},
+{s:'VXX',n:'iPath Series B S&P 500 VIX Short-Term Futures ETN',lev:1,txt:'future VIX a breve termine, 1× (ETN: debito della banca emittente)'},
+{s:'UVXY',n:'ProShares Ultra VIX Short-Term Futures ETF',lev:1.5,txt:'future VIX a breve termine, leva 1,5× giornaliera'},
+{s:'UVIX',n:'2x Long VIX Futures ETF',lev:2,txt:'future VIX a breve termine, leva 2× giornaliera'},
+{s:'VIXM',n:'ProShares VIX Mid-Term Futures ETF',lev:1,txt:'future VIX a medio termine, 1× (meno sensibile)'},
+{s:'SVXY',n:'ProShares Short VIX Short-Term Futures ETF',lev:-.5,txt:'INVERSO: future VIX a breve termine, −0,5× giornaliero'},
+{s:'SVIX',n:'-1x Short VIX Futures ETF',lev:-1,txt:'INVERSO: future VIX a breve termine, −1× giornaliero'}],
+info(sym){ const k=String(sym||'').trim().toUpperCase(); return GC.VixEtf.LIST.find(x=>x.s===k)||null; }
+};
+GC.MacdRsiBb=(function(){
+const fin=Number.isFinite, NA=NaN;
+const sma=(a,n)=>{ const r=new Array(a.length).fill(NA); let s=0,c=0; for(let i=0;i<a.length;i++){ if(!fin(a[i])){ s=0; c=0; continue; } s+=a[i]; c++; if(c>n) s-=a[i-n]; if(c>=n) r[i]=s/n; } return r; };
+const ema=(a,n,alpha)=>{ alpha=alpha==null?2/(n+1):alpha; const r=new Array(a.length).fill(NA); let c=0,s=0,p=NA; for(let i=0;i<a.length;i++){ if(!fin(a[i])){ continue; } if(!fin(p)){ s+=a[i]; c++; if(c===n){ p=s/n; r[i]=p; } } else { p=alpha*a[i]+(1-alpha)*p; r[i]=p; } } return r; };
+const rma=(a,n)=>ema(a,n,1/n);
+const wma=(a,n)=>{ const r=new Array(a.length).fill(NA), d=n*(n+1)/2; for(let i=n-1;i<a.length;i++){ let s=0,ok=true; for(let k=0;k<n;k++){ const v=a[i-n+1+k]; if(!fin(v)){ ok=false; break; } s+=v*(k+1); } if(ok) r[i]=s/d; } return r; };
+const stdev=(a,n)=>{ const r=new Array(a.length).fill(NA); for(let i=n-1;i<a.length;i++){ let s=0,ok=true; for(let k=0;k<n;k++){ const v=a[i-n+1+k]; if(!fin(v)){ ok=false; break; } s+=v; } if(!ok) continue; const m=s/n; let q=0; for(let k=0;k<n;k++){ const v=a[i-n+1+k]-m; q+=v*v; } r[i]=Math.sqrt(q/n); } return r; };
+const MA={SMA:sma,EMA:(a,n)=>ema(a,n),'SMMA (RMA)':rma,WMA:wma};
+const DEF={fast:12,slow:26,signal:9,oscMA:'EMA',sigMA:'EMA',rsiLen:14,rsiUp:70,rsiLow:30,bbLen:20,bbMult:2,bbMA:'EMA',W:200};
+function calc(closes,p){
+p=Object.assign({},DEF,p||{}); const c=closes, om=p.oscMA==='SMA'?sma:(a,n)=>ema(a,n), sm=p.sigMA==='SMA'?sma:(a,n)=>ema(a,n);
+const fast=om(c,p.fast), slow=om(c,p.slow), macd=c.map((_,i)=>fin(fast[i])&&fin(slow[i])?fast[i]-slow[i]:NA), signal=sm(macd,p.signal), hist=macd.map((v,i)=>fin(v)&&fin(signal[i])?v-signal[i]:NA);
+const ch=c.map((v,i)=>i?v-c[i-1]:NA), upv=rma(ch.map(x=>fin(x)?Math.max(x,0):NA),p.rsiLen), dnv=rma(ch.map(x=>fin(x)?-Math.min(x,0):NA),p.rsiLen);
+const rsi=c.map((_,i)=>{ const u=upv[i], d=dnv[i]; if(!fin(u)||!fin(d)) return NA; return d===0?100:u===0?0:100-100/(1+u/d); });
+const basis=(MA[p.bbMA]||MA.EMA)(c,p.bbLen), sd=stdev(c,p.bbLen), upper=basis.map((v,i)=>fin(v)&&fin(sd[i])?v+p.bbMult*sd[i]:NA), lower=basis.map((v,i)=>fin(v)&&fin(sd[i])?v-p.bbMult*sd[i]:NA);
+return {macd,signal,hist,rsi,upper,lower}; }
+function color(h,rsi,close,up,lo,p){
+p=Object.assign({},DEF,p||{}); if(!fin(h)||!fin(rsi)||!fin(up)||!fin(lo)||!fin(close)) return null;
+if(h>=0) return rsi>p.rsiUp&&close>up?'nero_su':rsi>p.rsiUp?'verde':'verde_chiaro';
+return rsi<p.rsiLow&&close<lo?'nero_giu':rsi<p.rsiLow?'rosso':'rosa'; }
+function confl(rsi,close,up,lo,p){ p=Object.assign({},DEF,p||{}); if(!fin(rsi)||!fin(up)||!fin(lo)||!fin(close)) return null;
+return rsi>p.rsiUp&&close>up?'ipercomprato':rsi<p.rsiLow&&close<lo?'ipervenduto':'nessuna'; }
+const LABEL={nero_su:'NERO (estremo rialzista: RSI alto e prezzo oltre la banda)',verde:'verde (RSI alto)',verde_chiaro:'verde chiaro',nero_giu:'NERO (estremo ribassista: RSI basso e prezzo sotto la banda)',rosso:'rosso (RSI basso)',rosa:'rosa'};
+function comboWin(closes,end,p){
+p=Object.assign({},DEF,p||{}); if(end+1<p.W) return NaN; const w=closes.slice(end-p.W+1,end+1), r=calc(w,p), n=w.length-1;
+const tr=r.macd.map((m,i)=>fin(m)&&fin(r.signal[i])?(m+r.signal[i])/2:NA), sd=a=>{ const v=a.filter(fin); if(v.length<20) return NA; const m=v.reduce((s,x)=>s+x,0)/v.length; return Math.sqrt(v.reduce((s,x)=>s+(x-m)*(x-m),0)/v.length); };
+const sh=sd(r.hist), st=sd(tr), h=r.hist[n], t=tr[n]; if(!fin(h)||!fin(t)||!fin(sh)||!fin(st)||sh<=0||st<=0) return NaN;
+const wt=fin(p.comboW)?p.comboW:0.5; return wt*h/sh+(1-wt)*t/st; }
+function histWin(closes,end,p){
+p=Object.assign({},DEF,p||{}); if(end+1<p.W) return NA; const w=closes.slice(end-p.W+1,end+1); const r=calc(w,p); return r.hist[w.length-1]; }
+function analyze(code){
+const r={ok:false,reasons:[],params:{},codeHash:null,version:null,outputs:[],states:[],notes:[]};
+if(!code||!String(code).trim()){ r.reasons.push('nessun codice incollato'); return r; }
+const s=GC.IndSrc.strip(code), need=(c,m)=>{ if(!c) r.reasons.push(m); return !!c; };
+r.codeHash=GC.hash(s.replace(/\s+/g,' ').trim()); const mv=/\/\/\s*@version\s*=\s*(\d+)/.exec(String(code)); r.version=mv?+mv[1]:null;
+const dv=(v)=>{ const m=new RegExp('\\b'+v+'\\s*=\\s*input(?:\\.\\w+)?\\(\\s*(?:[^)]*?defval\\s*=\\s*)?(-?[\\d.]+)').exec(s); return m?+m[1]:null; };
+const ds=(v)=>{ const m=new RegExp('\\b'+v+'\\s*=\\s*input\\.string\\([^)]*?defval\\s*=\\s*"([^"]+)"').exec(s)||new RegExp('\\b'+v+'\\s*=\\s*input\\.string\\(\\s*"([^"]+)"').exec(s); return m?m[1]:null; };
+const struct=/fast_ma\s*=\s*\w+\s*==\s*"SMA"\s*\?\s*ta\.sma\(\s*src\s*,\s*fast_length\s*\)\s*:\s*ta\.ema\(\s*src\s*,\s*fast_length\s*\)/.test(s)&&/slow_ma\s*=\s*\w+\s*==\s*"SMA"\s*\?\s*ta\.sma\(\s*src\s*,\s*slow_length\s*\)\s*:\s*ta\.ema\(\s*src\s*,\s*slow_length\s*\)/.test(s)&&/macd\s*=\s*fast_ma\s*-\s*slow_ma/.test(s)&&/signal\s*=\s*\w+\s*==\s*"SMA"\s*\?\s*ta\.sma\(\s*macd\s*,\s*signal_length\s*\)\s*:\s*ta\.ema\(\s*macd\s*,\s*signal_length\s*\)/.test(s)&&/hist\s*=\s*macd\s*-\s*signal/.test(s);
+if(!need(struct,'struttura MACD non riconosciuta: attese  fast_ma/slow_ma (SMA o EMA), macd = fast_ma − slow_ma, signal (SMA o EMA), hist = macd − signal')) return r;
+const rsiOk=/up\s*=\s*ta\.rma\(\s*math\.max\(\s*change\s*,\s*0\s*\)\s*,\s*rsiLengthInput\s*\)/.test(s)&&/down\s*=\s*ta\.rma\(\s*-\s*math\.min\(\s*change\s*,\s*0\s*\)\s*,\s*rsiLengthInput\s*\)/.test(s)&&/rsi\s*=\s*down\s*==\s*0\s*\?\s*100\s*:\s*up\s*==\s*0\s*\?\s*0\s*:\s*100\s*-\s*\(\s*100\s*\/\s*\(\s*1\s*\+\s*up\s*\/\s*down\s*\)\s*\)/.test(s);
+if(!need(rsiOk,'struttura RSI non riconosciuta: attesi up/down con ta.rma e  rsi = down==0 ? 100 : up==0 ? 0 : 100 − 100/(1+up/down)')) return r;
+const bbOk=/devBB\s*=\s*multBB\s*\*\s*ta\.stdev\(\s*srcBB\s*,\s*lengthBB\s*\)/.test(s)&&/upperBB\s*=\s*basisBB\s*\+\s*devBB/.test(s)&&/lowerBB\s*=\s*basisBB\s*-\s*devBB/.test(s)&&/basisBB\s*=\s*ma\(\s*srcBB\s*,\s*lengthBB\s*,\s*maTypeBB\s*\)/.test(s);
+if(!need(bbOk,'struttura Bollinger non riconosciuta: attese  basis = ma(src,len,tipo), dev = mult·ta.stdev, upper/lower = basis ± dev')) return r;
+const srcOk=/\bsrc\s*=\s*input\([^)]*defval\s*=\s*close/.test(s)&&/rsiSourceInput\s*=\s*input\.source\(\s*close/.test(s)&&/srcBB\s*=\s*input\(\s*close/.test(s);
+if(!need(srcOk,'le sorgenti (MACD, RSI, Bollinger) devono essere close: altre sorgenti non sono supportate')) return r;
+const hc=/histColor\s*=\s*if\s+hist\s*>=\s*0/.test(s)&&/rsi\s*>\s*rsiUpper\s+and\s+close\s*>\s*upperBB/.test(s)&&/rsi\s*<\s*rsiLower\s+and\s+close\s*<\s*lowerBB/.test(s);
+if(!need(hc,'logica dei colori dell\'istogramma non riconosciuta')) return r;
+const P={fast:dv('fast_length'),slow:dv('slow_length'),signal:dv('signal_length'),oscMA:ds('sma_source'),sigMA:ds('sma_signal'),rsiLen:dv('rsiLengthInput'),rsiUp:dv('rsiUpper'),rsiLow:dv('rsiLower'),bbLen:dv('lengthBB'),bbMult:dv('multBB'),bbMA:ds('maTypeBB')};
+for(const k of ['fast','slow','signal','rsiLen','rsiUp','rsiLow','bbLen','bbMult']) if(!need(P[k]!=null&&fin(P[k])&&P[k]>0,'parametro non leggibile: '+k)) return r;
+for(const k of ['oscMA','sigMA']) if(!need(P[k]==='SMA'||P[k]==='EMA','tipo di media non supportato ('+k+'='+P[k]+')')) return r;
+if(!need(!!MA[P.bbMA],'tipo di media delle bande non supportato: '+P.bbMA+' (supportati SMA, EMA, SMMA (RMA), WMA; VWMA richiede il volume e non è supportato)')) return r;
+if(!need(P.fast<P.slow,'MACD: la media veloce deve essere più corta della lenta')) return r;
+r.params=Object.assign({},P,{W:DEF.W}); r.ok=true;
+r.outputs=[['hist','istogramma MACD = macd − signal (continuo, con segno, in unità di prezzo): NUOVO ingresso del motore al posto del delta'],['macd, signal','MACD '+P.fast+'/'+P.slow+' ('+P.oscMA+'), segnale '+P.signal+' ('+P.sigMA+')'],['rsi','RSI '+P.rsiLen+' (Wilder, ta.rma): soglie '+P.rsiLow+' / '+P.rsiUp],['upperBB / lowerBB','basis '+P.bbMA+' '+P.bbLen+' ± '+P.bbMult+'·stdev: usate solo per il colore NERO']];
+r.states=[['nero (rialzista)','hist ≥ 0, RSI > '+P.rsiUp+' e chiusura > banda superiore'],['verde','hist ≥ 0 e RSI > '+P.rsiUp],['verde chiaro','hist ≥ 0 negli altri casi'],['nero (ribassista)','hist < 0, RSI < '+P.rsiLow+' e chiusura < banda inferiore'],['rosso','hist < 0 e RSI < '+P.rsiLow],['rosa','hist < 0 negli altri casi']];
+r.notes=['Con questo indicatore le galassie NON descrivono più il volume ma il momento del prezzo (istogramma MACD).','Le bande e le forze del motore (lunghezza 300, moltiplicatore 1) sono quelle di sempre, applicate all\'istogramma.','Ogni barra usa una finestra fissa di '+DEF.W+' chiusure: le prime '+(DEF.W-1)+' barre di ogni serie sono non valide.','Serve il prezzo: in modalità «Importa» (solo delta incollato) questo ingresso non è disponibile.'];
+return r; }
+function applyToBars(bars,p){
+p=Object.assign({},DEF,p||{}); const sorted=(bars||[]).slice().sort((a,b)=>a.t-b.t), idx=[], cl=[];
+sorted.forEach((b,i)=>{ if(b&&b.px&&b.px.length===4&&fin(b.px[3])&&b.px[3]>0){ idx.push(i); cl.push(b.px[3]); } });
+const out=sorted.map(b=>Object.assign({},b)); let nOk=0,last=null;
+for(let i=0;i<out.length;i++){ out[i].valid=false; out[i].l=null; out[i].mx=null; out[i].mn=null; }
+for(let j=0;j<idx.length;j++){ const b=out[idx[j]], src=sorted[idx[j]]; const h=p.combo?comboWin(cl,j,p):histWin(cl,j,p); if(!fin(h)||!src.valid) continue; b.valid=true; b.o=0; b.l=h; b.mx=Math.max(h,0); b.mn=Math.min(h,0); nOk++; if(src.closed) last={i:idx[j],j}; }
+out.nValid=nOk; out.nPx=idx.length; out.info=null;
+if(last){ const w=cl.slice(Math.max(0,last.j-p.W+1),last.j+1), r=calc(w,p), k=w.length-1; out.info={t:out[last.i].t,hist:r.hist[k],macd:r.macd[k],signal:r.signal[k],rsi:r.rsi[k],close:w[k],upper:r.upper[k],lower:r.lower[k],color:color(r.hist[k],r.rsi[k],w[k],r.upper[k],r.lower[k],p),confl:confl(r.rsi[k],w[k],r.upper[k],r.lower[k],p)}; }
+return out; }
+return {DEF,calc,color,confl,LABEL,histWin,comboWin,analyze,applyToBars,_ema:ema,_sma:sma,_rma:rma,_wma:wma,_stdev:stdev};
+})();
+GC.Replay=(function(){
+const VARIANTS=[
+{id:'base',label:'Regole attuali',cfg:{},diag:true},
+{id:'be',label:'NUOVO · a bande (scatto + spinta in bande larghe)',mod:'band',cfg:{}},
+{id:'beA',label:'NUOVO · solo scatto dalle bande strette',mod:'band',cfg:{B:false}},
+{id:'beB',label:'NUOVO · solo spinta in bande larghe',mod:'band',cfg:{A:false}},
+{id:'nosq',label:'Senza filtro squeeze',cfg:{sq:false}},
+{id:'w24',label:'Finestra dopo squeeze 24 barre',cfg:{sqWin:24}},
+{id:'r10',label:'Squeeze a 1,00× (riaccensione 1,05×)',cfg:{sqR:1,sqOff:1.05}},
+{id:'d10',label:'Scatto da 0,10σ',cfg:{sqDist:.10}},
+{id:'p7',label:'Trend: 7 barre su 12 allineate',cfg:{P:7}},
+{id:'k16',label:'Trend: 10 barre su 16 allineate',cfg:{K:16,P:10}}];
+const med=a=>{ if(!a.length) return null; const s=a.slice().sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+function stats(tr,months){ const n=tr.length; if(!n) return {n:0,nL:0,nS:0,perMonth:months>0?0:null,win:null,avg:null,med:null,sum:null,avgR:null,worst:null,best:null,bars:null};
+const p=tr.map(x=>x.net), r=tr.filter(x=>x.r!=null).map(x=>x.r), sum=p.reduce((a,b)=>a+b,0);
+return {n,nL:tr.filter(x=>x.dir>0).length,nS:tr.filter(x=>x.dir<0).length,perMonth:months>0?n/months:null,win:p.filter(x=>x>0).length/n,avg:sum/n,med:med(p),sum,avgR:r.length?r.reduce((a,b)=>a+b,0)/r.length:null,worst:Math.min(...p),best:Math.max(...p),bars:tr.reduce((a,b)=>a+(b.bars||0),0)/n}; }
+function runOne(v,obs,px,cost,sqOn){
+const tf=v.mod==='band'?GC.BandEntry(v.cfg):GC.TF(Object.assign({sq:true},v.cfg)), ev=[]; let nPx=0;
+const diag={bars:0,trend:0,noAtr:0,noPx:0,notOk:0,inPos:0,reasons:{}};
+for(const o of obs){ const P=px.get?px.get(o.t):px[o.t]; if(P) nPx++; const r=tf.push(o,P||null,{hist:false}); for(const e of r.events) ev.push(e);
+if(v.diag&&v.mod!=='band'){ diag.bars++; if(o.status!=='ok') diag.notOk++; if(!P) diag.noPx++; let s=null; try{ s=tf.status({ready:true,stale:false}); }catch(x){}
+if(s){ if(s.pos) diag.inPos++; else if(s.dir){ diag.trend++; for(const m of (s.missing||[])){ const k=String(m).replace(/\(.*$/,'').replace(/:.*$/,'').replace(/\d+/g,'N').trim(); diag.reasons[k]=(diag.reasons[k]||0)+1; } } if(s.atr==null) diag.noAtr++; } } }
+const tr=[]; let open=null; for(const e of ev){ if(e.type==='ENTRY') open=e; else if(e.type==='EXIT'&&open){ const dir=open.dir, pct=dir*(e.price-open.price)/open.price*100, risk=Math.abs(open.price-open.stop0)/open.price*100, net=pct-cost;
+tr.push({t:open.t,tx:e.t,dir,entry:open.price,exit:e.price,stop0:open.stop0,pct,net,r:risk>0?net/risk:null,bars:e.bars,reason:e.reason,grade:open.grade}); open=null; } }
+return {tr,open:open?{t:open.t,dir:open.dir,entry:open.price,grade:open.grade}:null,nPx,diag:v.mod==='band'?Object.assign({band:true},tf.diag):v.diag?diag:null};
+}
+function run(x){
+x=x||{}; const obs=(x.obs||[]).filter(o=>o&&typeof o.t==='number').sort((a,b)=>a.t-b.t), px=x.px||new Map(), cost=isFinite(x.cost)?+x.cost:0.05, vs=x.variants||VARIANTS;
+const withPx=obs.filter(o=>px.get?px.get(o.t):px[o.t]); if(withPx.length<50) return {ok:false,reason:'Dati insufficienti: servono almeno 50 barre 1H con prezzo (ne ho '+withPx.length+').',n:obs.length,nPx:withPx.length};
+const from=withPx[0].t, to=withPx[withPx.length-1].t, months=(to-from)/86400/30.4375, mid=from+(to-from)/2;
+const res=vs.map(v=>{ const r=runOne(v,obs,px,cost); return {id:v.id,label:v.label,cfg:v.cfg,diag:r.diag,open:r.open,trades:r.tr,all:stats(r.tr,months),h1:stats(r.tr.filter(t=>t.t<=mid),months/2),h2:stats(r.tr.filter(t=>t.t>mid),months/2)}; });
+return {ok:true,n:obs.length,nPx:withPx.length,from,to,mid,months,cost,results:res,note:'Misura sul passato con delta approssimato (Yahoo), ingresso teorico alla chiusura della barra-segnale, nessuno slippage né gap. Non è un backtest validato e non è consulenza finanziaria.'};
+}
+return {run,VARIANTS,stats};
+})();
+GC.Zero=(function(){
+const fin=Number.isFinite, DEF={K:3,H:12,N:45};
+function kin(x,K){ K=K||DEF.K; const n=x.length, v=new Array(n).fill(NaN), a=new Array(n).fill(NaN);
+for(let i=K;i<n;i++) if(fin(x[i])&&fin(x[i-K])) v[i]=(x[i]-x[i-K])/K;
+for(let i=2*K;i<n;i++) if(fin(v[i])&&fin(v[i-K])) a[i]=(v[i]-v[i-K])/K;
+return {v,a}; }
+function root(x,v,a){ const A=a/2; if(Math.abs(A)<1e-15){ if(Math.abs(v)<1e-15) return null; const t=-x/v; return t>0?t:null; }
+const D=v*v-4*A*x; if(D<0) return null; const s=Math.sqrt(D), c=[(-v-s)/(2*A),(-v+s)/(2*A)].filter(t=>t>0).sort((p,q)=>p-q); return c.length?c[0]:null; }
+const at=(x,v,a,t)=>x+v*t+.5*a*t*t;
+function project(x,v,a,H){ H=H||DEF.H; if(!fin(x)||!fin(v)||!fin(a)) return null; const side=x<0?-1:x>0?1:(v>=0?1:-1);
+if(x===0) return {side,cross:false,t:null,ext:0,tExt:0,x,v,a,H};
+const t=root(x,v,a), cross=t!=null&&t<=H;
+let ext=x, tExt=0; const cand=[H]; if(Math.abs(a)>1e-15){ const ts=-v/a; if(ts>0&&ts<H) cand.push(ts); }
+for(const c of cand){ const y=at(x,v,a,c); if(side<0?y>ext:y<ext){ ext=y; tExt=c; } }
+return {side,cross,t:cross?t:null,ext,tExt,x,v,a,H}; }
+function scale(x,n){ const q=x.slice(-(n||400)).filter(fin).map(Math.abs).sort((p,q)=>p-q); return q.length?Math.max(1e-12,q[Math.min(q.length-1,Math.floor(.9*q.length))]):1e-12; }
+function backtest(x,v,a,H,from){ H=H||DEF.H; const n=x.length, R={}; for(const k of ['below','above']) R[k]={n:0,predCross:0,predCrossHit:0,predNo:0,predNoHit:0,actualCross:0};
+for(let i=Math.max(from||0,0);i+H<n;i++){ if(!fin(x[i])||!fin(v[i])||!fin(a[i])||x[i]===0) continue; const side=x[i]<0?-1:1, p=project(x[i],v[i],a[i],H); if(!p) continue;
+let done=true, act=false; for(let j=i+1;j<=i+H;j++){ if(!fin(x[j])){ done=false; break; } if(side<0?x[j]>=0:x[j]<=0) act=true; } if(!done) continue;
+const r=R[side<0?'below':'above']; r.n++; if(act) r.actualCross++; if(p.cross){ r.predCross++; if(act) r.predCrossHit++; } else { r.predNo++; if(!act) r.predNoHit++; } }
+return R; }
+const pct=(a,b)=>b>0?a/b:null;
+function summary(r){ return {n:r.n,predCross:r.predCross,hitCross:pct(r.predCrossHit,r.predCross),predNo:r.predNo,hitNo:pct(r.predNoHit,r.predNo),base:pct(r.actualCross,r.n)}; }
+function zone(x,i){ if(!fin(x[i])||x[i]===0) return null; const s=x[i]<0?-1:1; let k=i, ext=x[i]; while(k>=0&&fin(x[k])&&(s<0?x[k]<0:x[k]>0)){ if(s<0?x[k]<ext:x[k]>ext) ext=x[k]; k--; }
+return {side:s,age:i-k,ext,depth:Math.abs(ext),recov:Math.abs(ext)>0?1-Math.abs(x[i])/Math.abs(ext):0}; }
+function priceOK(c,i,side,P){ P=P||6; if(i<P||!fin(c[i])||!fin(c[i-P])) return false; const d=c[i]-c[i-P]; return side<0?d>=0:d<=0; }
+function htfSlope(t,c,secs,mult,histFn){ const n=t.length, out=new Array(n).fill(NaN), B=secs*mult, ids=[], cl=[];
+for(let i=0;i<n;i++){ const b=Math.floor(t[i]/B); if(ids.length&&ids[ids.length-1]===b) cl[cl.length-1]=c[i]; else { ids.push(b); cl.push(c[i]); } }
+const h=histFn(cl); let j=-1;
+for(let i=0;i<n;i++){ const b=Math.floor(t[i]/B); while(j+1<ids.length&&ids[j+1]<b) j++; if(j>=1&&fin(h[j])&&fin(h[j-1])) out[i]=h[j]-h[j-1]; }
+return out; }
+const htfOK=(s,i,side)=>fin(s[i])&&(side<0?s[i]>=0:s[i]<=0);
+function backtestG(x,v,a,H,from,gate){ H=H||DEF.H; const n=x.length, R={}; for(const k of ['below','above']) R[k]={n:0,actual:0,kin:{p:0,h:0},all:{p:0,h:0},no:{p:0,h:0}};
+for(let i=Math.max(from||0,0);i+H<n;i++){ if(!fin(x[i])||!fin(v[i])||!fin(a[i])||x[i]===0) continue; const side=x[i]<0?-1:1, p=project(x[i],v[i],a[i],H); if(!p) continue;
+let done=true, act=false; for(let j=i+1;j<=i+H;j++){ if(!fin(x[j])){ done=false; break; } if(side<0?x[j]>=0:x[j]<=0) act=true; } if(!done) continue;
+const r=R[side<0?'below':'above']; r.n++; if(act) r.actual++;
+if(p.cross){ r.kin.p++; if(act) r.kin.h++; if(gate[i]){ r.all.p++; if(act) r.all.h++; } } else { r.no.p++; if(!act) r.no.h++; } }
+return R; }
+function summaryG(r){ return {n:r.n,base:pct(r.actual,r.n),kin:{n:r.kin.p,rate:pct(r.kin.h,r.kin.p)},all:{n:r.all.p,rate:pct(r.all.h,r.all.p)},no:{n:r.no.p,rate:pct(r.no.h,r.no.p)}}; }
+return {DEF,kin,root,at,project,scale,backtest,summary,zone,priceOK,htfSlope,htfOK,backtestG,summaryG};
+})();
+return GC;
+})();
+if(typeof module!=='undefined') module.exports=GC;</script><script>(function(){
+const $=id=>document.getElementById(id), fin=Number.isFinite, Z=GC.Zero, MB=GC.MacdRsiBb;
+const WORKER='https://yahooproxy.b864v27974.workers.dev', SYM='QQQ', POLL=5;
+const LS=(()=>{ try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return localStorage; }catch(e){ return {getItem(){return null;},setItem(){}}; } })();
+const TFS={1:{iv:'1m',first:'7d',next:'1d',fb:'7d'},5:{iv:'5m',first:'30d',next:'5d',fb:'30d'},15:{iv:'15m',first:'60d',next:'5d',fb:'60d'}};
+const cfg={tf:+LS.getItem('z31|tf')||5,H:+LS.getItem('z31|H')||12,K:+LS.getItem('z31|K')||3,P:6,M:3,ses:LS.getItem('z48|ses')==='reg'?'reg':'ext',MAXB:1500}; if(!TFS[cfg.tf]) cfg.tf=5;
+const mins=b=>b*cfg.tf;
+const S={gen:0,sig:'',dirty:true,cur:null,fresh:{k:'attesa',t:''},retry:0,bars:new Map(),conn:'attesa',err:'',busy:false,fails:0,okAt:0,n:0,calc:null,x:[],v:[],a:[],i:-1,ref:{v:1e-9,a:1e-9},proj:null,bt:null,live:false,t:[],c:[],car:{ang:0,mo:[],moAcc:0,sm:{}},nowSec:Date.now()/1000,full:false,reqs:0};
+window.__zero=S;
+const fmt=(n,d)=>fin(n)?(n<0?'−':'')+Math.abs(n).toFixed(d==null?2:d):'—', sg=(n,d)=>fin(n)?(n>0?'+':n<0?'−':'')+Math.abs(n).toFixed(d==null?3:d):'—';
+const tfmt=new Intl.DateTimeFormat('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Rome'});
+async function get(range,ivO){ const TF=TFS[cfg.tf], tfAt=cfg.tf, sesAt=cfg.ses;
+const ac=new AbortController(), to=setTimeout(()=>ac.abort(),15000); S.reqs++; S.reqAt=Date.now();
+try{ const url=WORKER+'?symbol='+SYM+'&interval='+(ivO||TF.iv)+'&range='+range+'&includePrePost='+(cfg.ses==='ext')+'&_='+Date.now(); let r;
+try{ r=await fetch(url,{signal:ac.signal,cache:'no-store'}); }catch(x){ throw Object.assign(new Error('Worker non raggiungibile (rete, URL o CORS)'),{kind:'network'}); }
+if(r.status===429) throw Object.assign(new Error('limite di richieste (HTTP 429)'),{kind:'rate',retry:+r.headers.get('retry-after')||0});
+if(!r.ok) throw Object.assign(new Error('il Worker ha risposto HTTP '+r.status),{kind:'http'});
+let j; try{ j=await r.json(); }catch(x){ throw Object.assign(new Error('risposta non JSON'),{kind:'json'}); }
+const pr=GC.Yahoo.parse(j,{sym:SYM,iv:ivO||TF.iv}); if(!pr.ok) throw Object.assign(new Error(pr.msg),{kind:pr.code}); pr.tf=tfAt; pr.ses=sesAt; return pr;
+} finally{ clearTimeout(to); } }
+const closedT=(t,now)=>t+cfg.tf*60<=(now==null?Date.now()/1000:now);
+function merge(pr){ let n=0; if(pr.tf!==cfg.tf||pr.ses!==cfg.ses) return 0; const now=Date.now()/1000; for(const b of pr.bars){ if(!fin(b.c)||b.c<=0) continue; const old=S.bars.get(b.t); if(closedT(b.t,now)&&(!old||old.c!==b.c)) S.dirty=true; S.bars.set(b.t,{t:b.t,o:b.o,c:b.c,hi:b.hi,lo:b.lo}); n++; } return n; }
+const nyf=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+function sessionOpen(nowSec){ const p={}; for(const x of nyf.formatToParts(new Date(nowSec*1000))) p[x.type]=x.value; if(p.weekday==='Sat'||p.weekday==='Sun') return false; const m=(+p.hour%24)*60+(+p.minute); return cfg.ses==='ext'?(m>=240&&m<1200):(m>=570&&m<960); }
+function freshness(){ const now=Date.now()/1000, B=cfg.tf*60; if(S.conn!=='ok'||!S.t.length) return {k:'attesa',t:S.conn==='errore'?'errore di connessione':'in attesa dei dati'};
+const lastEnd=S.t[S.t.length-1]+B, expected=Math.floor((now-25)/B)*B, last=hmf.format(new Date((lastEnd-B)*1000));
+if(!sessionOpen(now)) return {k:'chiuso',t:'mercato chiuso · ultima barra chiusa '+last};
+return lastEnd>=expected?{k:'ok',t:'dati aggiornati · ultima barra chiusa '+last}:{k:'ritardo',t:'dati IN RITARDO · ultima barra chiusa '+last}; }
+function nextDelay(){ const now=Date.now()/1000, B=cfg.tf*60; if(!sessionOpen(now)) return 120; const lastEnd=S.t.length?S.t[S.t.length-1]+B:0, expected=Math.floor((now-25)/B)*B;
+if(lastEnd<expected){ S.retry++; return S.retry>12?60:10; } S.retry=0; const toClose=(Math.floor(now/B)+1)*B+3-now; return Math.max(5,Math.min(20,toClose)); }
+async function poll(){
+if(S.busy) return; S.busy=true; clearTimeout(S.timer); let wait=60, gen=S.gen;
+try{ const need=!S.full||S.bars.size<150; let pr;
+const TF=TFS[cfg.tf]; if(need){ pr=await get(TF.first); if(pr.tf===cfg.tf&&pr.ses===cfg.ses) S.full=true; }
+else { try{ pr=await get(TF.next); }catch(x){ if(x.kind==='rate') throw x; pr=await get(TF.fb); } }
+if(gen===S.gen){ merge(pr); S.conn='ok'; S.err=''; S.fails=0; S.okAt=Date.now(); const pv=S.liveVals?Object.assign({},S.liveVals):null, c0=S.cur&&S.cur.c, t0=S.t.length?S.t[S.t.length-1]:0; recompute(); onData(S.t.length&&S.t[S.t.length-1]!==t0&&t0!==0,!!S.cur&&c0!=null&&S.cur.c!==c0&&t0!==0,pv); tryRecap(); wait=nextDelay(); } else wait=1;
+}catch(x){ S.fails++; S.conn='errore'; S.err=x.message||String(x); wait=x.kind==='rate'?Math.max(30,x.retry||0):Math.min(60,5*Math.pow(2,Math.min(S.fails,4))); updateText(); }
+finally{ S.busy=false; clearTimeout(S.timer); S.timer=setTimeout(poll,wait*1000); } }
+function resetData(){ S.gen++; S.bars=new Map(); S.full=false; S.calc=null; S.proj=null; S.n=0; S.t=[]; S.c=[]; S.i=-1; S.dots=[]; S.sig=''; S.dirty=true; S.cur=null; S.fails=0; S.retry=0; G.lastT=0; clearTimeout(S.timer); if(!S.busy) poll(); }
+const p90=(a)=>{ const q=a.slice(-400).filter(fin).map(Math.abs).sort((p,q)=>p-q); return q.length?Math.max(1e-12,q[Math.min(q.length-1,Math.floor(.9*q.length))]):1e-12; };
+function computeLive(){ S.liveDot=null; if(!S.calc||!S.cur||S.c.length<40) return; const cl=S.c.concat([S.cur.c]), C=MB.calc(cl,MB.DEF), k=cl.length-1, h=C.hist[k], rs=C.rsi[k], dp=cl[k]-cl[k-cfg.P]; if(!fin(h)||!fin(rs)||!fin(dp)||h===0) return;
+const g=h>0, rOK=g?rs>50:rs<50, eps=cl[k]*.0002, pOK=g?dp>eps:dp<-eps, pAg=g?dp<-eps:dp>eps; S.liveDot={g,lev:pOK?(rOK?'3':'2p'):(pAg?'0':'1'),t:S.cur.t,live:true}; S.liveVals={rsi:rs,c:cl[k],bt:S.cur.t,at:Date.now()/1000}; }
+function strengthBar(){ const C=S.calc, k=S.i; if(!C||k<2||!S.sc) return {s:.3,dR:0,dP:0}; const dR=C.rsi[k]-C.rsi[k-1], dP=S.c[k]-S.c[k-1]; const s=(Math.min(1,Math.abs(dR)/S.sc.r)+Math.min(1,Math.abs(dP)/S.sc.p))/2; return {s:Math.max(.04,s),dR,dP}; }
+function strengthLive(pv){ const C=S.calc, v=S.liveVals; if(!C||!v||!S.sc) return {s:.3,dR:0,dP:0}; const prev=(pv&&pv.bt===v.bt)?pv:{rsi:C.rsi[S.i],c:S.c[S.i],at:S.t[S.t.length-1]+cfg.tf*60}; const dR=v.rsi-prev.rsi, dP=v.c-prev.c, f=Math.max(.05,Math.min(1,Math.sqrt(Math.max(5,v.at-prev.at)/(cfg.tf*60))));
+const s=(Math.min(1,Math.abs(dR)/(S.sc.r*f))+Math.min(1,Math.abs(dP)/(S.sc.p*f)))/2; return {s:Math.max(.04,s),dR,dP}; }
+function recompute(){
+const now=Date.now()/1000, ks=[...S.bars.keys()].sort((p,q)=>p-q), closed=ks.filter(t=>closedT(t,now)), fm=ks.filter(t=>!closedT(t,now));
+S.cur=fm.length?{t:fm[fm.length-1],c:S.bars.get(fm[fm.length-1]).c}:null;
+const keep=closed.slice(-cfg.MAXB), n=keep.length, sig=n+'|'+(n?keep[n-1]:0)+'|'+(n?S.bars.get(keep[n-1]).c:0)+'|'+cfg.tf+cfg.ses;
+if(!S.dirty&&sig===S.sig&&S.calc){ S.fresh=freshness(); computeLive(); updateText(); return; }
+S.sig=sig; S.dirty=false; S.t=keep; S.c=keep.map(t=>S.bars.get(t).c); S.n=n; if(n<40){ S.calc=null; S.proj=null; S.i=n-1; S.fresh=freshness(); updateText(); return; }
+S.nowSec=now; const C=MB.calc(S.c,MB.DEF); S.calc=C; S.x=C.hist; const k=Z.kin(S.x,cfg.K); S.v=k.v; S.a=k.a; S.i=n-1;
+{ const dr=[],dp=[]; for(let q=Math.max(1,n-300);q<n;q++){ if(fin(C.rsi[q])&&fin(C.rsi[q-1])) dr.push(Math.abs(C.rsi[q]-C.rsi[q-1])); dp.push(Math.abs(S.c[q]-S.c[q-1])); } const p9=a=>{ a.sort((x,y)=>x-y); return a.length?Math.max(1e-9,a[Math.min(a.length-1,Math.floor(.9*a.length))]):1e-9; }; S.sc={r:p9(dr),p:p9(dp)}; }
+S.proj=Z.project(S.x[S.i],S.v[S.i],S.a[S.i],cfg.H); S.zone=Z.zone(S.x,S.i); computeLive();
+S.fresh=freshness(); updateText(); }
+const hmf=new Intl.DateTimeFormat('it-IT',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Rome'}), hm=t=>fin(t)?hmf.format(new Date(t*1000)):'';
+const LEVN={0:'tratteggiato (prezzo contro)',1:'vuoto (prezzo fermo)','2p':'metà (prezzo concorde)',3:'pieno (prezzo e RSI concordi)'};
+const LIGHT={'0':.5,'1':.7,'2p':.9,'3':1.15}, DMG={'0':.5,'1':1,'2p':1.5,'3':2};
+function dotFor(k){ const C=S.calc; if(!C||k<1) return null; const h=C.hist[k], rs=C.rsi[k], dp=S.c[k]-S.c[k-cfg.P]; if(!fin(h)||!fin(rs)||!fin(dp)||h===0) return null;
+const g=h>0, rOK=g?rs>50:rs<50, eps=S.c[k]*.0002, pOK=g?dp>eps:dp<-eps, pAg=g?dp<-eps:dp>eps; return {g,lev:pOK?(rOK?'3':'2p'):(pAg?'0':'1'),t:S.t[k]}; }
+function computeDots(){ const C=S.calc, i=S.i, out=[]; if(!C||i<14) return out; for(let k=i-11;k<=i;k++) out.push(dotFor(k)); return out; }
+const SEEN_KEY='z53|seen'; let seenMem=+LS.getItem(SEEN_KEY)||0;
+function markSeen(){ seenMem=Math.floor(Date.now()/1000); try{ LS.setItem(SEEN_KEY,String(seenMem)); }catch(e){} }
+const fmtDur=sec=>{ const m=Math.round(sec/60), h=Math.floor(m/60); return h>=24?Math.floor(h/24)+' g '+(h%24)+' h':h>0?h+' h '+(m%60)+' min':m+' min'; };
+function dotOf(cl){ const C=MB.calc(cl,MB.DEF), k=cl.length-1, h=C.hist[k], rs=C.rsi[k], dp=cl[k]-cl[k-cfg.P]; if(!fin(h)||!fin(rs)||!fin(dp)||h===0) return null; const g=h>0, rOK=g?rs>50:rs<50, eps=cl[k]*.0002, pOK=g?dp>eps:dp<-eps, pAg=g?dp<-eps:dp>eps; return {g,lev:pOK?(rOK?'3':'2p'):(pAg?'0':'1')}; }
+async function fetchMinutes(away){ try{ const pr=await get(away>72000?'5d':'1d','1m'); return pr.bars.filter(b=>fin(b.c)&&b.c>0).sort((a,b)=>a.t-b.t); }catch(e){ return null; } }
+function buildEntries(since,mins){ const B=cfg.tf*60, now=Date.now()/1000, C=S.calc, ent=[]; if(!C) return ent;
+const nBefore=b=>{ let lo=0,hi=S.t.length; while(lo<hi){ const m=(lo+hi)>>1; if(S.t[m]<b) lo=m+1; else hi=m; } return lo; }, lastIdx=T=>nBefore(T-B+1)-1;
+for(let k=S.i;k>=1&&S.t[k]+B>since;k--){ const d=dotFor(k); if(!d) continue; const env=C.hist[k-1]>0; ent.push({T:S.t[k]+B,kind:'bar',bt:S.t[k],g:d.g,lev:d.lev,env,c:S.c[k],pts:ptsOf(d.g,d.lev,env,false)}); }
+let p0=null,p1=null; for(const m of mins){ const T=m.t+60; if(T<=now) p1=m.c; if(T<=since){ p0=m.c; continue; } if(T>now) continue; const b=Math.floor(m.t/B)*B; if(T===b+B) continue; const n=nBefore(b); if(n<40) continue; const d=dotOf(S.c.slice(Math.max(0,n-700),n).concat([m.c])); if(!d) continue; const li=lastIdx(T); if(li<0) continue; ent.push({T,kind:'live',bt:b,g:d.g,lev:d.lev,env:C.hist[li]>0,c:m.c,pts:ptsOf(d.g,d.lev,C.hist[li]>0,false)}); }
+ent.sort((a,b)=>a.T-b.T||(a.kind==='bar'?-1:1)); const out=ent.slice(-500); out.p0=p0; out.p1=p1; out.cut=ent.length-out.length; return out; }
+function buildRecap(since,ent){ const B=cfg.tf*60, now=Date.now()/1000, C=S.calc; if(!C||S.i<2) return null; let k0=-1; for(let k=0;k<=S.i;k++){ if(S.t[k]+B>since){ k0=k; break; } }
+const away=now-since; const E=ent&&ent.length?ent:null; const entSum=()=>{ const cl=e=>e.g!==e.env?'c':(e.lev==='3'?'p':'n'), cnt=(L,k)=>L.filter(e=>cl(e)===k).length, sp0=x=>(x>0?'+':x<0?'−':'')+Math.abs(x), tot=E.reduce((a,e)=>a+e.pts,0), nb=E.filter(e=>e.kind==='bar'), pf=cnt(E,'p'), pc=cnt(E,'c'), pz=cnt(E,'n');
+return {nb,pf,pc,pz,tot,ls:['aggiornamenti: '+E.length+' ('+nb.length+' chiusure di barra · '+(E.length-nb.length)+' provvisori, uno al minuto)','eliminati '+E.length+': '+pf+' pieni nella luce giusta (+'+pf*100+') · '+pc+' contro la luce ('+(-pc*100)+') · '+pz+' neutri (0)','punti nel frattempo: '+sp0(tot)+' · media '+sp0(Math.round(tot/E.length))+' a sparo (provvisori compresi)']}; };
+if(k0<1){ if(!E) return {n:0,away,lines:['via da '+fmtDur(away)+' · nessun aggiornamento da '+cfg.tf+' min nel frattempo'],head:'NESSUNA NOVITÀ',dots:[],score:0,ent:[]}; const q=entSum(), a0=ent.p0!=null?ent.p0:S.c[S.i], a1=ent.p1!=null?ent.p1:E[E.length-1].c, pc0=(a1-a0)/a0*100, sp1=x=>(x>0?'+':x<0?'−':'')+Math.abs(x).toFixed(2), dr=Math.abs(Math.round(pc0*100))<5?'FERMO':pc0>0?'SU':'GIÙ'; return {n:0,away,head:'QQQ '+dr+' '+sp1(pc0)+'%',dir:dr,pct:pc0,flips:[],lines:['via da '+fmtDur(away)+' · nessuna barra da '+cfg.tf+' min chiusa','QQQ '+a0.toFixed(2)+' → '+a1.toFixed(2)+' ('+sp1(pc0)+'%)'].concat(q.ls),dots:E.slice(-36),score:q.tot,ent:E,pf:q.pf,pc:q.pc,pz:q.pz,t0:performance.now()}; }
+const sgn=h=>h>0?1:h<0?-1:0, flips=[], lv={'3':0,'2p':0,'1':0,'0':0}; let gc=0,rc=0,pf=0,pc=0,pz=0,tot=0; const dots=[];
+for(let k=k0;k<=S.i;k++){ const h=C.hist[k]; if(h>0) gc++; else if(h<0) rc++; if(sgn(h)!==sgn(C.hist[k-1])&&sgn(h)!==0&&sgn(C.hist[k-1])!==0) flips.push({t:S.t[k],to:h>0?'verde':'rosso'}); const d=dotFor(k); if(d){ lv[d.lev]++; dots.push(d); const env=C.hist[k-1]>0, p=ptsOf(d.g,d.lev,env,false); d.pts=p; tot+=p; if(p>0) pf++; else if(p<0) pc++; else pz++; } }
+const n=S.i-k0+1, p0=E&&ent.p0!=null?ent.p0:S.c[k0-1], p1=E&&ent.p1!=null?ent.p1:S.c[S.i], pct=(p1-p0)/p0*100, r0=C.rsi[k0-1], r1=E&&S.liveVals&&fin(S.liveVals.rsi)?S.liveVals.rsi:C.rsi[S.i], z0=C.hist[k0-1]>0?'VERDE':'ROSSA', z1=C.hist[S.i]>0?'VERDE':'ROSSA', dir=Math.abs(Math.round(pct*100))<5?'FERMO':pct>0?'SU':'GIÙ';
+const sp=x=>(x>0?'+':x<0?'−':'')+Math.abs(x).toFixed(2);
+let lines=['via da '+fmtDur(away)+' · '+n+(n===1?' barra':' barre')+' da '+cfg.tf+' min chiusa'.replace('chiusa',n===1?'chiusa':'chiuse'),'zona: '+z0+' → '+z1+(flips.length?' · '+flips.length+' cambi: '+flips.slice(-3).map(f=>hm(f.t)+' '+f.to).join(', '):' · nessun cambio'),'istogramma: '+gc+(gc===1?' barra verde':' barre verdi')+' · '+rc+(rc===1?' rossa':' rosse'),'QQQ '+p0.toFixed(2)+' → '+p1.toFixed(2)+' ('+sp(pct)+'%) · RSI '+(fin(r0)?r0.toFixed(0):'—')+' → '+(fin(r1)?r1.toFixed(0):'—'),'intensità: '+lv['3']+' piene · '+lv['2p']+' metà · '+lv['1']+' vuote · '+lv['0']+' contro il prezzo','sparati: '+(pf+pc+pz)+' · '+pf+' pieni nella luce giusta (+'+pf*100+') · '+pc+' contro la luce ('+(-pc*100)+') · '+pz+' a zero','punti nel frattempo: '+(tot>0?'+':tot<0?'−':'')+Math.abs(tot)+' · media '+((pf+pc+pz)?(tot/(pf+pc+pz)>0?'+':'')+(tot/(pf+pc+pz)).toFixed(0):'0')+' a sparo · eliminati '+n];
+if(E){ const q=entSum(); lines=lines.slice(0,4).concat(q.ls); tot=q.tot; pf=q.pf; pc=q.pc; pz=q.pz; }
+return {n,away,lines,head:'QQQ '+dir+' '+sp(pct)+'%',dir,pct,flips,gc,rc,lv,dots:E?E.slice(-36):dots.slice(-36),ent:E||[],score:tot,pf,pc,pz,z0,z1,t0:performance.now()}; }
+async function tryRecap(){ if(!S.pendingRecap||!S.calc) return; const since=S.pendingRecap; S.pendingRecap=0; S.recapBusy=true; let ent=null; try{ const mins=await fetchMinutes(Date.now()/1000-since); if(mins&&S.calc) ent=buildEntries(since,mins); }catch(e){}
+let R=null; try{ R=buildRecap(since,ent); }catch(e){ S.drawErr=String(e); } S.recapBusy=false; if(!R) return; R.fine=!!ent; S.recap=R; S.recapAll=R; if(R.n||R.ent.length){ G.score+=R.score; G.kills+=R.ent.length||R.n; }
+const el=$('recap'); if(el){ el.hidden=false; const rows=R.ent.map(e=>'<div><i class="d '+(e.g?'g':'r')+e.lev+'"></i><span>'+hm(e.T)+'</span><span>'+(e.kind==='bar'?'chiusura barra '+hm(e.bt):'provvisorio')+' · '+LEVN[e.lev].split(' ')[0]+' · ambiente '+(e.env?'verde':'rosso')+' · <u>'+(e.g!==e.env?'CONTRO LA LUCE':e.lev==='3'?'pieno nella luce':'neutro')+'</u></span><b>'+(e.pts>0?'+':e.pts<0?'−':'')+Math.abs(e.pts)+'</b></div>').join(''); el.innerHTML='<b>Mentre eri via · '+R.head+'</b><br>'+R.lines.join('<br>')+(R.ent.length?'<div class="rl">'+rows+'</div>':'')+'<div class="rn">'+(R.fine?'Aggiornamenti ricostruiti con dati a 1 minuto: a pagina chiusa non esiste un dettaglio ogni 5–10 secondi.'+(R.ent.length&&R.ent.length>=500?' Mostrati gli ultimi 500.':''):'Dettaglio al minuto non disponibile: riepilogo solo sulle barre chiuse.')+'</div>'; } }
+function dotAt(ctx,x,y,r,g,lev,alpha){ const c=g?'#22c55e':'#ef4444'; ctx.save(); if(alpha!=null) ctx.globalAlpha=alpha; ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=Math.max(1.5,r*.22);
+const R=r-ctx.lineWidth/2; if(lev==='0') ctx.setLineDash([r*.5,r*.35]); ctx.beginPath(); ctx.arc(x,y,R,0,6.2832); ctx.stroke(); ctx.setLineDash([]);
+if(lev==='3'){ ctx.beginPath(); ctx.arc(x,y,R,0,6.2832); ctx.fill(); } else if(lev==='2p'){ ctx.beginPath(); ctx.arc(x,y,R,Math.PI/2,Math.PI*1.5); ctx.closePath(); ctx.fill(); }
+ctx.restore(); }
+const MAPS=[
+['################','#p.....#.......#','#.####.#.#####.#','#.#....#.....#.#','#.#.########.#.#','#.#.........#e.#','#.#########.#.#','#.....e.....#.#','#####.#######.#','#...#.......#.#','#.#.#.#####.#.#','#.#...#e..#...#','#.#####.#.###.#','#.......#.....#','#.e.###.....e.#','################'].map(r=>r.slice(0,16).padEnd(16,'#')),
+['################','#p.............#','#.%%%.....%%%..#','#.%.........%..#','#.%....e....%..#','#......%%......#','#..e...%%...e..#','#......%%......#','#.%..........%.#','#.%....e.....%.#','#.%%%......%%%.#','#..............#','#..e........e..#','#.....%%%%.....#','#..............#','################']];
+const IW=200, IH=150, VW=400, VH=300, HUDH=124, CH=VH+HUDH;
+const DNAME={'3':'PIENO','2p':'METÀ','1':'VUOTO','0':'TRATTEGGIATO'};
+const G={fired:[],queue:[],label:null,evT:0,job:null,lastT:0,lvl:1,x:1.5,y:1.5,a:0,hp:100,score:0,kills:0,ammo:0,shots:[],en:[],trans:0,pending:null,light:.9,lightT:.9,fire:0,flash:0,keys:{},msg:'',msgT:0,bob:0,deaths:0,zbuf:new Float32Array(IW)};
+const ic=document.createElement('canvas'); ic.width=IW; ic.height=IH; const ix=ic.getContext('2d');
+const spr=document.createElement('canvas'); spr.width=64; spr.height=64; (function(){ const c=spr.getContext('2d'); c.fillStyle='#1b1b1b'; c.fillRect(20,26,24,26); c.fillRect(22,50,8,12); c.fillRect(34,50,8,12); c.fillRect(12,28,8,20); c.fillRect(44,28,8,20); c.beginPath(); c.arc(32,17,10,0,6.2832); c.fill(); c.fillStyle='#fff'; c.fillRect(26,13,4,4); c.fillRect(34,13,4,4); c.fillStyle='#000'; c.fillRect(27,14,2,2); c.fillRect(35,14,2,2); c.strokeStyle='#fff'; c.lineWidth=1.2; c.strokeRect(20.5,26.5,23,25); })();
+const tint=document.createElement('canvas'); tint.width=64; tint.height=64; const tx=tint.getContext('2d');
+function cell(x,y){ const r=MAPS[G.lvl-1][Math.floor(y)]; return r?r[Math.floor(x)]||'#':'#'; }
+const solid=(x,y)=>{ const c=cell(x,y); return c==='#'||c==='%'; };
+function loadLevel(n){ G.lvl=n; G.en=[]; G.shots=[]; const M=MAPS[n-1]; for(let y=0;y<16;y++) for(let x=0;x<16;x++){ const c=M[y][x]; if(c==='p'){ G.x=x+.5; G.y=y+.5; G.a=n===1?0:.3; } } G.hp=100; }
+function curZone(){ if(S.force) return S.force; const d=S.dots&&S.dots[S.dots.length-1]; return d||null; }
+function say(t){ G.msg=t; G.msgT=3; }
+function lastClosedDot(){ const D=S.dots||[]; for(let k=D.length-1;k>=0;k--) if(D[k]) return D[k]; return null; }
+function ptsOf(g,lev,envG,live){ if(live) return 0; if(g!==envG) return -100; return lev==='3'?100:0; }
+function shoot(kind,ev){ if(G.fire>0||G.trans>0) return null; let d; if(S.force) d=S.force; else { d=(kind==='live'?S.liveDot:null)||lastClosedDot()||{g:G.lvl===2,lev:'1'}; if(d.t) G.lastT=d.t; G.fired.push({t:d.t||0,kind:kind==='live'&&S.liveDot?'live':'bar'}); } G.ammo++; G.fire=.28; G.flash=.1;
+let a=G.a, best=null, bd=1e9; for(const e of G.en){ const dx=e.x-G.x, dy=e.y-G.y, ang=Math.atan2(dy,dx); let da=Math.atan2(Math.sin(ang-G.a),Math.cos(ang-G.a)); const dist=Math.hypot(dx,dy); if(Math.abs(da)<.11&&dist<bd){ bd=dist; best=da; } } if(best!=null) a+=best;
+const sh={live:kind==='live'&&!!S.liveDot,x:G.x+Math.cos(a)*.3,y:G.y+Math.sin(a)*.3,dx:Math.cos(a),dy:Math.sin(a),g:d.g,lev:d.lev,age:0,dmg:DMG[d.lev]}; G.shots.push(sh); G.label={g:d.g,lev:d.lev,t:d.t||null,live:kind==='live'&&!!S.liveDot,ev:ev||null,life:2.6}; return sh; }
+function los(ax,ay,bx,by){ const d=Math.hypot(bx-ax,by-ay), n=Math.ceil(d/.1); for(let i=1;i<n;i++){ const t=i/n; if(solid(ax+(bx-ax)*t,ay+(by-ay)*t)) return false; } return true; }
+function bfs(sx,sy,tx,ty){ const q=[[sx,sy]], prev=new Map([[sx+','+sy,null]]); while(q.length){ const [x,y]=q.shift(); if(x===tx&&y===ty) break; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx, ny=y+dy, k=nx+','+ny; if(prev.has(k)||nx<0||ny<0||nx>15||ny>15||solid(nx+.5,ny+.5)) continue; prev.set(k,[x,y]); q.push([nx,ny]); } }
+const path=[]; let k=tx+','+ty; if(!prev.has(k)) return path; let c=[tx,ty]; while(c&&!(c[0]===sx&&c[1]===sy)){ path.unshift(c); c=prev.get(c[0]+','+c[1]); } return path; }
+const AP={path:[],t:0};
+function freeDist(a){ let d=0; while(d<8&&!solid(G.x+Math.cos(a)*d,G.y+Math.sin(a)*d)) d+=.1; return d; }
+const angd=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
+function autopilot(dt){ if(G.trans>0||G.pending) return; const J=G.job;
+if(J){ const err=angd(G.a,J.a), ts=3.4*dt; G.a+=Math.max(-ts,Math.min(ts,err)); J.t+=dt;
+if(J.stage==='turn'&&Math.abs(err)<.04){ const dist=Math.max(1.4,Math.min(J.want,freeDist(J.a)-.7)); G.lastDist=dist; G.lastWant=J.want; const e={x:G.x+Math.cos(J.a)*dist,y:G.y+Math.sin(J.a)*dist,hp:1,hit:0,ph:Math.random()*6}; G.en.push(e); G.fire=0; const sh=shoot(J.kind,J.ev); if(sh){ e.hp=sh.dmg*.999; J.e=e; J.stage='fly'; } else J.stage='done'; }
+else if(J.stage==='fly'&&(!J.e||J.e.hp<=0||J.t>6)) J.stage='done';
+if(J.stage==='done'||J.t>8){ G.job=null; AP.t=0; AP.path=[]; } return; }
+if(G.queue.length){ const ev=G.queue.shift(); let best=G.a, bs=-1e9; const want=1.5+4*ev.s; for(let k=0;k<24;k++){ const a=G.a+(k-12)*Math.PI/12, f=freeDist(a), sc=(f>=want+.7?50:Math.min(f,5.7))-.35*Math.abs(angd(G.a,a)); if(sc>bs){ bs=sc; best=a; } } G.job={stage:'turn',a:best,t:0,kind:ev.k,ev,want:1.5+4*ev.s}; return; }
+AP.t-=dt; if(AP.t<=0||!AP.path.length){ const goal=[1+Math.floor(Math.random()*14),1+Math.floor(Math.random()*14)]; AP.path=bfs(Math.floor(G.x),Math.floor(G.y),goal[0],goal[1]); AP.t=.6; if(AP.path.length) AP.path.shift(); }
+while(AP.path.length&&Math.hypot(AP.path[0][0]+.5-G.x,AP.path[0][1]+.5-G.y)<.35) AP.path.shift();
+if(AP.path.length){ const hx=Math.atan2(AP.path[0][1]+.5-G.y,AP.path[0][0]+.5-G.x), err=angd(G.a,hx), ts=2.6*dt; G.a+=Math.max(-ts,Math.min(ts,err)); if(Math.abs(err)<.8){ const mv=2.0*dt, nx=G.x+Math.cos(G.a)*mv, ny=G.y+Math.sin(G.a)*mv; if(!solid(nx,G.y)) G.x=nx; if(!solid(G.x,ny)) G.y=ny; G.bob+=dt*9; } } }
+const RIT={mode:(LS.getItem('z49|rit')==='barra')?'barra':'dato'};
+function pushEvent(k,st){ if(G.queue.length<3) G.queue.push(Object.assign({k},st||{s:.3,dR:0,dP:0})); }
+function onData(newBar,priceChanged,pv){ if(S.pendingRecap||S.recap||S.recapBusy) return; if(newBar) pushEvent('bar',strengthBar()); else if(RIT.mode==='dato'&&priceChanged) pushEvent('live',strengthLive(pv)); }
+function update(dt){ const K=G.keys; dt=Math.min(dt,.05);
+if(G.pending&&G.trans<=0){ G.trans=1.6; }
+if(G.trans>0){ const before=G.trans; G.trans-=dt; if(G.pending&&before>.8&&G.trans<=.8){ loadLevel(G.pending); G.pending=null; } if(G.trans<0) G.trans=0; }
+const z=curZone(); const want=z?(z.g?2:1):1; if(z&&want!==G.lvl&&!G.pending&&G.trans<=0){ G.pending=want; say('LIVELLO '+want+' · ZONA '+(want===2?'VERDE':'ROSSA')); }
+G.lightT=z?LIGHT[z.lev]||.8:.8; G.light+=(G.lightT-G.light)*Math.min(1,dt*3);
+autopilot(dt);
+if(G.fire>0) G.fire-=dt; if(G.flash>0) G.flash-=dt; if(G.msgT>0) G.msgT-=dt;
+for(const s of G.shots){ s.age+=dt; const st=4.2*dt; s.x+=s.dx*st; s.y+=s.dy*st; if(solid(s.x,s.y)){ s.dead=true; continue; } for(const e of G.en){ if(e.hp>0&&Math.hypot(e.x-s.x,e.y-s.y)<.38){ e.hp-=s.dmg; e.hit=.15; s.dead=true; if(e.hp<=0){ G.score+=ptsOf(s.g,s.lev,G.lvl===2,s.live); G.kills++; e.die=.4; } break; } } if(s.age>4) s.dead=true; }
+G.shots=G.shots.filter(s=>!s.dead);
+for(const e of G.en){ if(e.hit>0) e.hit-=dt; if(e.hp<=0) e.die=(e.die==null?.4:e.die)-dt; }
+G.en=G.en.filter(e=>e.hp>0||e.die>0);
+if(G.label){ G.label.life-=dt; if(G.label.life<=0) G.label=null; }
+}
+function renderView(){ const M=MAPS[G.lvl-1], red=G.lvl===1, L=G.light, px=G.x, py=G.y, dirx=Math.cos(G.a), diry=Math.sin(G.a), plx=-diry*.66, ply=dirx*.66;
+const hue=red?[200,40,40]:[40,170,70], ceil=red?[40,6,6]:[6,32,12], flo=red?[26,16,16]:[14,26,16], bob=Math.sin(G.bob)*2;
+const gc=ix.createLinearGradient(0,0,0,IH/2); gc.addColorStop(0,'rgb('+ceil.map(v=>Math.round(v*L)).join(',')+')'); gc.addColorStop(1,'rgb('+ceil.map(v=>Math.round(v*L*2)).join(',')+')'); ix.fillStyle=gc; ix.fillRect(0,0,IW,IH/2);
+const gf=ix.createLinearGradient(0,IH/2,0,IH); gf.addColorStop(0,'rgb('+flo.map(v=>Math.round(v*.5*L)).join(',')+')'); gf.addColorStop(1,'rgb('+flo.map(v=>Math.round(v*L*1.6)).join(',')+')'); ix.fillStyle=gf; ix.fillRect(0,IH/2,IW,IH/2);
+for(let x=0;x<IW;x++){ const cx=2*x/IW-1, rdx=dirx+plx*cx, rdy=diry+ply*cx; let mx=Math.floor(px), my=Math.floor(py); const ddx=Math.abs(1/(rdx||1e-9)), ddy=Math.abs(1/(rdy||1e-9)); let sx,sy,sdx,sdy; if(rdx<0){ sx=-1; sdx=(px-mx)*ddx; } else { sx=1; sdx=(mx+1-px)*ddx; } if(rdy<0){ sy=-1; sdy=(py-my)*ddy; } else { sy=1; sdy=(my+1-py)*ddy; }
+let side=0, hit=0, n=0; while(!hit&&n++<40){ if(sdx<sdy){ sdx+=ddx; mx+=sx; side=0; } else { sdy+=ddy; my+=sy; side=1; } const c=(M[my]||'#')[mx]||'#'; if(c==='#'||c==='%') hit=c; }
+const pd=Math.max(.05,side===0?sdx-ddx:sdy-ddy); G.zbuf[x]=pd; const h=Math.min(IH*3,IH/pd), top=(IH-h)/2+bob*.4; let wu=side===0?py+pd*rdy:px+pd*rdx; wu-=Math.floor(wu);
+const shade=Math.min(1.1,(1/(1+pd*.22)))*(side?.72:1)*L*(hit==='%'?.8:1), rows=6;
+for(let r=0;r<rows;r++){ const y0=top+h*r/rows, y1=top+h*(r+1)/rows, off=(r%2)*.5, bu=(wu*3+off)%1, mort=bu<.07; const k=mort?.35:(1-.12*((r+Math.floor(wu*3+off))%2)); const cr=Math.min(255,hue[0]*shade*k), cg=Math.min(255,hue[1]*shade*k), cb=Math.min(255,hue[2]*shade*k); ix.fillStyle='rgb('+(cr|0)+','+(cg|0)+','+(cb|0)+')'; ix.fillRect(x,Math.floor(y0),1,Math.ceil(y1-y0)+1); ix.fillStyle='rgba(0,0,0,.45)'; ix.fillRect(x,Math.floor(y0),1,1); } }
+const inv=1/(plx*diry-dirx*ply), list=G.en.filter(e=>e.hp>0||e.die>0).map(e=>({e,d:(e.x-px)**2+(e.y-py)**2})).sort((a,b)=>b.d-a.d);
+tx.clearRect(0,0,64,64);
+for(const {e,d} of list){ const sx=e.x-px, sy=e.y-py, tX=inv*(diry*sx-dirx*sy), tY=inv*(-ply*sx+plx*sy); if(tY<=.15) continue; const scr=Math.floor(IW/2*(1+tX/tY)), sh=Math.abs(IH/tY)*.95, sw=sh, y0=IH/2-sh/2+bob*.4+sh*.05, xs=Math.floor(scr-sw/2), xe=Math.floor(scr+sw/2);
+tx.clearRect(0,0,64,64); tx.drawImage(spr,0,0); tx.globalCompositeOperation='source-atop'; tx.fillStyle=(e.hit>0||e.hp<=0)?'rgba(255,255,255,.8)':(red?'rgba(180,20,20,'+(.18+.1*Math.sin(e.ph+G.bob*.3))+')':'rgba(20,150,50,'+(.18+.1*Math.sin(e.ph+G.bob*.3))+')'); tx.fillRect(0,0,64,64); tx.globalCompositeOperation='source-over';
+for(let sx2=Math.max(0,xs);sx2<Math.min(IW,xe);sx2++){ if(tY>G.zbuf[sx2]) continue; const u=Math.floor((sx2-xs)/sw*64); ix.globalAlpha=Math.min(1,.35+L*.65)*Math.min(1,1/(.5+tY*.15)); ix.drawImage(tint,u,0,1,64,sx2,y0,1,sh); } ix.globalAlpha=1; }
+const sl=G.shots.map(s=>({s,d:(s.x-px)**2+(s.y-py)**2})).sort((a,b)=>b.d-a.d);
+for(const {s} of sl){ const sx=s.x-px, sy=s.y-py, tX=inv*(diry*sx-dirx*sy), tY=inv*(-ply*sx+plx*sy); if(tY<=.1) continue; const scr=IW/2*(1+tX/tY), r=Math.max(3,Math.min(44,IH/tY*.2)); if(scr<0||scr>=IW||tY>G.zbuf[Math.floor(scr)]) continue; dotAt(ix,scr,IH/2+bob*.4+IH/tY*.12,r,s.g,s.lev); } }
+function pistol(ctx,z){ const k=G.fire>0?Math.sin(G.fire/.28*Math.PI)*16:0, bob=Math.sin(G.bob)*3, cx=VW/2+14+Math.cos(G.bob*.5)*3, y=VH-4+k+Math.abs(bob);
+ctx.save(); ctx.translate(cx,y); ctx.fillStyle='#d9d9d9'; ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(-9,-70); ctx.lineTo(9,-70); ctx.lineTo(14,0); ctx.closePath(); ctx.fill(); ctx.fillStyle='#8c8c8c'; ctx.fillRect(-8,-92,16,24); ctx.fillStyle='#bdbdbd'; ctx.fillRect(-11,-70,22,10); ctx.fillStyle='#000'; ctx.fillRect(-4,-92,8,6); ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.strokeRect(-8,-92,16,24);
+ctx.fillStyle='#6b6b6b'; ctx.beginPath(); ctx.moveTo(-18,0); ctx.lineTo(-14,-30); ctx.lineTo(14,-30); ctx.lineTo(18,0); ctx.closePath(); ctx.fill(); if(G.flash>0&&z){ dotAt(ctx,0,-104,16,z.g,z.lev); } ctx.restore(); }
+function hudDraw(ctx,z){ const y0=VH; ctx.fillStyle='#000'; ctx.fillRect(0,y0,VW,HUDH); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.strokeRect(1,y0+1,VW-2,HUDH-2);
+const T=(s,x,y,sz,al,b)=>{ ctx.font=(b?'bold ':'')+sz+'px system-ui,sans-serif'; ctx.textAlign=al||'left'; ctx.fillStyle='#fff'; ctx.fillText(s,x,y); };
+T('LIVELLO',14,y0+16,10); T(String(G.lvl),14,y0+42,26,'left',1); T('PUNTI',92,y0+16,10); T(String(G.score),92,y0+42,22,'left',1); T('ELIMINATI',188,y0+16,10); T(String(G.kills),188,y0+42,22,'left',1); { const B=cfg.tf*60, nw=Date.now()/1000, fs=Math.floor(nw/B)*B, ci=Math.max(0,fs+B-nw); T('adesso '+tfmt.format(new Date()),VW-14,y0+16,10,'right',1); T('barra '+hm(fs)+' chiude tra '+Math.floor(ci/60)+':'+String(Math.floor(ci%60)).padStart(2,'0'),VW-14,y0+29,9,'right'); }
+T('ritmo: '+(RIT.mode==='dato'?'ogni aggiornamento':'barra chiusa'),250,y0+42,11,'left',1);
+const zt=S.force?'PROVA':(!S.calc?'attendo i dati…':(z?('ZONA '+(z.g?'VERDE':'ROSSA')+' · '+LEVN[z.lev]):'—')); T(zt,14,y0+60,11,'left',1); T('QQQ chiusura '+(S.c&&S.c.length?S.c[S.c.length-1].toFixed(2):'—')+(S.cur?' · ora '+S.cur.c.toFixed(2)+' (non chiusa)':'')+' · '+cfg.tf+' min · sessione '+(cfg.ses==='ext'?'estesa':'regolare'),14,y0+74,9); { const f=S.fresh||{k:'attesa',t:''}; ctx.fillStyle=f.k==='ok'?'#fff':'#ffb020'; ctx.font='bold 9px system-ui'; ctx.textAlign='right'; ctx.fillText(f.k==='ok'?'DATI AGGIORNATI':f.k==='ritardo'?'DATI IN RITARDO':f.k==='chiuso'?'MERCATO CHIUSO':'IN ATTESA',VW-14,y0+60); }
+const D=(S.dots||[]).slice(-11), step=(VW-28)/12, Ld=S.liveDot;
+const slot=(x,d,live)=>{ const y=y0+94; if(d){ const fr=!S.force&&d.t&&d.t===G.lastT&&(live?G.fired.length&&G.fired[G.fired.length-1].kind==='live':true); dotAt(ctx,x,y,8,d.g,d.lev,fr?1:.8); if(fr){ ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.strokeRect(x-11.5,y-11.5,23,23); } T(hm(d.t),x,y0+118,7.5,'center'); } else { ctx.strokeStyle='#666'; ctx.setLineDash([2,3]); ctx.beginPath(); ctx.arc(x,y,7,0,6.2832); ctx.stroke(); ctx.setLineDash([]); if(live&&S.cur) T(hm(S.cur.t),x,y0+118,7.5,'center'); } };
+for(let k=0;k<11;k++) slot(14+step*(k+.5),D[k]||null,false);
+slot(VW-14-step*.5,Ld||null,true); T('IN FORMAZIONE',VW-14-step*.5,y0+84-14,6.5,'center');
+T(G.force?'':'',VW-14,y0+16,9,'right'); }
+function draw(){ const cv=$('cv'), ctx=cv.getContext('2d'); if(cv.width!==VW*2){ cv.width=VW*2; cv.height=CH*2; } ctx.setTransform(2,0,0,2,0,0); ctx.imageSmoothingEnabled=false; renderView(); ctx.drawImage(ic,0,0,IW,IH,0,0,VW,VH);
+const z=curZone(); pistol(ctx,z);
+ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(VW/2-8,VH/2); ctx.lineTo(VW/2-3,VH/2); ctx.moveTo(VW/2+3,VH/2); ctx.lineTo(VW/2+8,VH/2); ctx.moveTo(VW/2,VH/2-8); ctx.lineTo(VW/2,VH/2-3); ctx.moveTo(VW/2,VH/2+3); ctx.lineTo(VW/2,VH/2+8); ctx.stroke();
+const M=MAPS[G.lvl-1], ms=4; ctx.save(); ctx.globalAlpha=.8; ctx.fillStyle='#000'; ctx.fillRect(VW-16*ms-6,6,16*ms,16*ms); for(let y=0;y<16;y++) for(let x=0;x<16;x++){ const c=M[y][x]; if(c==='#'||c==='%'){ ctx.fillStyle='#fff'; ctx.fillRect(VW-16*ms-6+x*ms,6+y*ms,ms-.5,ms-.5); } } for(const e of G.en) if(e.hp>0){ ctx.fillStyle=G.lvl===1?'#ef4444':'#22c55e'; ctx.fillRect(VW-16*ms-6+e.x*ms-1.5,6+e.y*ms-1.5,3,3); } ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(VW-16*ms-6+G.x*ms,6+G.y*ms,2.2,0,6.2832); ctx.fill(); ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.moveTo(VW-16*ms-6+G.x*ms,6+G.y*ms); ctx.lineTo(VW-16*ms-6+(G.x+Math.cos(G.a)*1.5)*ms,6+(G.y+Math.sin(G.a)*1.5)*ms); ctx.stroke(); ctx.restore();
+if(G.label&&G.trans<=0){ const L=G.label, txt='SPARATO · '+DNAME[L.lev]+' · '+(L.g?'VERDE':'ROSSO')+(L.t?' · '+hm(L.t)+(L.live?' in formazione':''):''); ctx.font='bold 12px system-ui'; let w=ctx.measureText(txt).width+44, tx2=null;
+if(L.ev){ const e=L.ev; tx2='variazione '+(e.s>.66?'FORTE → lontano':e.s>.33?'media → distanza media':'debole → vicino')+' · '+Math.round(e.s*100)+'% (RSI '+sg(e.dR,1)+' · prezzo '+sg(e.dP,2)+')'; ctx.font='10px system-ui'; w=Math.max(w,ctx.measureText(tx2).width+20); }
+const h=tx2?40:26, y=VH-8-h; ctx.fillStyle='#000'; ctx.fillRect(VW/2-w/2,y,w,h); ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.strokeRect(VW/2-w/2+.5,y+.5,w-1,h-1); dotAt(ctx,VW/2-w/2+16,y+13,8,L.g,L.lev); ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.font='bold 12px system-ui'; ctx.fillText(txt,VW/2-w/2+30,y+17); if(tx2){ ctx.font='10px system-ui'; ctx.fillText(tx2,VW/2-w/2+10,y+33); } }
+if(G.msgT>0&&G.trans<=0){ ctx.font='bold 13px system-ui'; ctx.textAlign='center'; ctx.fillStyle='#000'; ctx.fillRect(VW/2-130,12,260,24); ctx.fillStyle='#fff'; ctx.fillText(G.msg,VW/2,29); }
+if(G.trans>0){ const a=G.trans>.8?(1.6-G.trans)/.8:G.trans/.8; ctx.fillStyle='rgba(0,0,0,'+Math.min(1,a*1.2)+')'; ctx.fillRect(0,0,VW,VH); if(a>.5){ const nl=G.pending||G.lvl; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font='bold 34px system-ui'; ctx.fillText('LIVELLO '+nl,VW/2,VH/2-4); ctx.fillStyle=nl===2?'#22c55e':'#ef4444'; ctx.font='bold 16px system-ui'; ctx.fillText(nl===2?'ZONA VERDE':'ZONA ROSSA',VW/2,VH/2+24); } }
+hudDraw(ctx,z); drawRecap(ctx); }
+function drawRecap(ctx){ const R=S.recap; if(!R) return; const W0=VW-24, x0=12, y0=10; ctx.save(); ctx.fillStyle='rgba(0,0,0,.93)'; ctx.fillRect(x0,y0,W0,VH-20); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.strokeRect(x0+1,y0+1,W0-2,VH-22);
+const T2=(t,x,y,sz,b,al)=>{ ctx.font=(b?'bold ':'')+sz+'px system-ui,sans-serif'; ctx.textAlign=al||'left'; ctx.fillStyle='#fff'; ctx.fillText(t,x,y); };
+T2('MENTRE ERI VIA',x0+14,y0+22,11,1); T2(R.head,x0+14,y0+52,28,1);
+let y=y0+76; ctx.font='12px system-ui'; for(const ln of R.lines){ const words=ln.split(' '); let cur=''; for(const w of words){ const t2=cur?cur+' '+w:w; if(ctx.measureText(t2).width>W0-28&&cur){ T2(cur,x0+14,y,12); y+=15; cur=w; } else cur=t2; } if(cur){ T2(cur,x0+14,y,12); y+=18; } }
+const shown=Math.min(R.dots.length,Math.floor((performance.now()-R.t0)/80)+1), per=18, gap=(W0-28)/per; for(let i=0;i<shown;i++){ const d=R.dots[i], row=Math.floor(i/per), col=i%per; dotAt(ctx,x0+14+gap*(col+.5),y+4+row*15,5.5,d.g,d.lev); }
+T2('tocca per chiudere',x0+W0/2,y0+VH-28,11,0,'center'); ctx.restore(); }
+let last=performance.now(); function loop(now){ const dt=(now-last)/1000; last=now; try{ update(dt); draw(); }catch(e){ S.drawErr=String(e&&e.stack||e); } requestAnimationFrame(loop); }
+function updateText(){ S.dots=computeDots(); const el=$('st'); if(el) el.textContent=(S.conn==='ok'?'Connesso':'Non connesso')+' · '+((S.fresh&&S.fresh.t)||'')+' · sessione '+(cfg.ses==='ext'?'estesa (pre/after incluse)':'solo regolare')+' · segnali solo su barre chiuse'+' · '+S.n+' barre da '+cfg.tf+' minuti'+(S.t.length?' · ultima '+tfmt.format(new Date(S.t[S.n-1]*1000)):'')+(S.err?' · '+S.err:'')+' · richieste '+S.reqs; }
+function bind(id,key){ const b=$(id); if(!b) return; const on=e=>{ e.preventDefault(); G.keys[key]=true; if(key==='fire') shoot(); }, off=e=>{ e.preventDefault(); G.keys[key]=false; }; b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointerleave',off); b.addEventListener('pointercancel',off); }
+function init(){
+$('cfgTF').value=String(cfg.tf); $('cfgK').value=String(cfg.K);
+$('cfgTF').onchange=()=>{ cfg.tf=+$('cfgTF').value; try{ LS.setItem('z31|tf',String(cfg.tf)); }catch(e){} resetData(); };
+$('cfgRIT').value=RIT.mode; $('cfgRIT').onchange=()=>{ RIT.mode=$('cfgRIT').value; try{ LS.setItem('z49|rit',RIT.mode); }catch(e){} G.queue.length=0; };
+$('cfgSES').value=cfg.ses; $('cfgSES').onchange=()=>{ cfg.ses=$('cfgSES').value==='reg'?'reg':'ext'; try{ LS.setItem('z48|ses',cfg.ses); }catch(e){} resetData(); };
+$('cfgK').onchange=()=>{ cfg.K=+$('cfgK').value; try{ LS.setItem('z31|K',String(cfg.K)); }catch(e){} recompute(); };
+$('now').onclick=()=>{ S.fails=0; S.retry=0; clearTimeout(S.timer); poll(); };
+const fl=[null,{g:false,lev:'3'},{g:true,lev:'3'},{g:true,lev:'1'},{g:false,lev:'0'}], fn=['dati reali','prova: rosso pieno','prova: verde pieno','prova: verde vuoto','prova: rosso tratteggiato']; let fi=0; $('demo').onclick=()=>{ fi=(fi+1)%fl.length; S.force=fl[fi]; $('demo').textContent='Modalità: '+fn[fi]+' (tocca per cambiare)'; };
+setInterval(()=>{ try{ if(document.hidden) return; S.fresh=freshness(); const nw=Date.now(); if(S.busy) return; const stale=S.fresh.k==='ritardo'; if((stale&&nw-(S.reqAt||0)>10000)||(S.conn==='ok'&&nw-(S.reqAt||0)>45000&&sessionOpen(nw/1000))){ clearTimeout(S.timer); poll(); } }catch(e){} },1000);
+$('cv').addEventListener('pointerdown',()=>{ if(S.recap) S.recap=null; }); if($('recap')) $('recap').onclick=(ev)=>{ if(!ev.target.closest('.rl')) $('recap').hidden=true; };
+{ const gap0=seenMem?Date.now()/1000-seenMem:0; if(seenMem&&gap0>=30) S.pendingRecap=seenMem; markSeen(); setInterval(()=>{ if(!document.hidden) markSeen(); },5000); addEventListener('pagehide',markSeen); }
+try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){}
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ markSeen(); return; } const gap=Date.now()/1000-seenMem; if(gap>=30&&!S.pendingRecap) S.pendingRecap=seenMem; markSeen(); S.fails=0; S.retry=0; clearTimeout(S.timer); if(!S.busy) poll(); });
+S.dots=[]; loadLevel(1); window.__game=G; window.__api={buildEntries,ptsOf,buildRecap,tryRecap,dotFor,strengthBar,strengthLive,loadLevel,shoot,lastClosedDot,computeDots,sessionOpen,freshness,update,pushEvent,onData,computeLive}; poll(); requestAnimationFrame(loop); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();</script></body></html>
